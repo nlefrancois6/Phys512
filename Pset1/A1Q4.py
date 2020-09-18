@@ -109,7 +109,9 @@ quad and my integrator, although there is a very slight offset in the horizontal
 of the vertical line (discontinuity) between the two integrators. This may be due to
 the specification of a maximum number of steps for the simpson's rule integrator,
 which prevents the routine from infinitely calling the recursive relation to split the
-singularity region into smaller rectangles.
+singularity region into smaller rectangles. By putting this inside a try/except loop,
+the integrator is able to exit the infinite loop, set I = 0 for that rectangle, and move
+safely to the next location.
 """
     
     

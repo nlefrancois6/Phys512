@@ -7,7 +7,6 @@ Created on Tue Sep 15 11:42:23 2020
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 
 #Define the true function with high resolution
@@ -61,7 +60,7 @@ def rat_fit(x,y,n,m):
         mat[:,i]=x**i
     for i in range(1,m):
         mat[:,i-1+n]=-y*x**i
-    pars=np.dot(np.linalg.pinv(mat),y)
+    pars=np.dot(np.linalg.inv(mat),y)
     p=pars[:n]
     q=pars[n:]
     return p,q
@@ -81,7 +80,7 @@ def rat_interp(xp, f_np, n, m, x_true, f_true):
 
 [poly_L, err_poly_L] = poly_interp(xp_L, f_L, n, m, x_true_L, lorentz_true)
 [cs_L, err_cs_L] = cubicSpline_interp(xp_L, f_L, x_true_L, lorentz_true)
-[p_L, q_L, err_rat_L] = rat_interp(xp_L, f_L, 1, 8, x_true_L, lorentz_true)
+[p_L, q_L, err_rat_L] = rat_interp(xp_L, f_L, 4, 5, x_true_L, lorentz_true)
 
 """
 For n=1, m=8, the error of the lorentz rational fit is 1e-15, but for higher
@@ -93,6 +92,11 @@ of order 1/x^2, so n=1 provides a good fit.
 Switching from inv to pinv results in much better results at high order:
     (n=2, m=7, err = 1e-16, n=3, m=6, err = 1e-16, n=4, m=5, err = 1e-15)
 as well as 1e-16 at n=1.
+
+The lorentzian function is an even function, meaning that only even order terms
+should be significant. With n=4 m=5, this was observed to be the case using 
+pinv (other terms were ~1e-14), but using inv all 4 terms of both p and q were order 1
+which leads to the observed large increase in error when using inv.
 """
 
 
