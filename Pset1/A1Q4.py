@@ -102,7 +102,15 @@ plt.xlabel('Radius')
 plt.ylabel('Electric Field Strength')
 plt.title('Electric Field Due to Sphere of Radius {}'.format(R))
 plt.legend()
-    
+
+"""
+There is a singularity at u=1 when z=R. This seems to be handled fine by both
+quad and my integrator, although there is a very slight offset in the horizontal position
+of the vertical line (discontinuity) between the two integrators. This may be due to
+the specification of a maximum number of steps for the simpson's rule integrator,
+which prevents the routine from infinitely calling the recursive relation to split the
+singularity region into smaller rectangles.
+"""
     
     
     

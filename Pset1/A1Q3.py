@@ -61,7 +61,7 @@ def rat_fit(x,y,n,m):
         mat[:,i]=x**i
     for i in range(1,m):
         mat[:,i-1+n]=-y*x**i
-    pars=np.dot(np.linalg.inv(mat),y)
+    pars=np.dot(np.linalg.pinv(mat),y)
     p=pars[:n]
     q=pars[n:]
     return p,q
@@ -81,4 +81,21 @@ def rat_interp(xp, f_np, n, m, x_true, f_true):
 
 [poly_L, err_poly_L] = poly_interp(xp_L, f_L, n, m, x_true_L, lorentz_true)
 [cs_L, err_cs_L] = cubicSpline_interp(xp_L, f_L, x_true_L, lorentz_true)
-[p_L, q_L, err_rat_L] = rat_interp(xp_L, f_L, n, m, x_true_L, lorentz_true)
+[p_L, q_L, err_rat_L] = rat_interp(xp_L, f_L, 1, 8, x_true_L, lorentz_true)
+
+"""
+For n=1, m=8, the error of the lorentz rational fit is 1e-15, but for higher
+order the error rapidly gets much worse: 
+    (n=2, m=7, err = 0.6, n=3, m=6, err = 1.5, n=4, m=5, err = 1.2)
+This makes sense because the lorentzian function is a rational function 
+of order 1/x^2, so n=1 provides a good fit.
+
+Switching from inv to pinv results in much better results at high order:
+    (n=2, m=7, err = 1e-16, n=3, m=6, err = 1e-16, n=4, m=5, err = 1e-15)
+as well as 1e-16 at n=1.
+"""
+
+
+
+
+
