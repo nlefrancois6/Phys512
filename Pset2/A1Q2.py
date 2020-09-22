@@ -71,12 +71,18 @@ def cheb_eval(A, params):
     return y
     
 
-#Calculate the maximum error of the fit on the data points x
-def fit_error(x, y, fit):
+#Calculate the maximum error of the fit
+def fit_error(y, fit):
     err = np.abs(y-fit)
     err_max = max(err)
     
     return err_max
+
+#Calculate the root mean square error of the fit
+def rms_error(y, fit):
+    mse = ((y-fit)**2).mean()
+    
+    return np.sqrt(mse)
 
 #Find the minimum order n needed to acheive a fit error satisfying the tolerance
 def find_min_order(x, y, tol):
@@ -94,29 +100,11 @@ def find_min_order(x, y, tol):
         params = cheb_fit(xp, yp, n, A)
         y_fit = cheb_eval(A, params)
         
-        err = fit_error(xp, yp, y_fit)      
+        err = fit_error(yp, y_fit)      
         n = n+1
     
     print('Accuracy satisfies tolerance for order ', n, ' polynomial')
     return n, err
-
-"""
-#Find the minimum order n needed to acheive a fit error satisfying the tolerance
-def find_min_order(params, tol):
-    #Initialize n and err
-    
-    for order in range(len(params)):
-        if np.abs(params[order]) < tol:
-            n = order
-            print('Accuracy satisfies tolerance for order ', n, ' polynomial')
-            #if we find an n that satisfies tol, return it
-            return n
-            break
-    #if we didn't find an n that satisfies tol, output the max order tested 
-    print('Tolerance not satisfied for order', len(params))
-    
-    return len(params)
-"""
 
 #Define the function y = log_{2}(x) over a set of x-data points
 NP = 100
@@ -125,38 +113,60 @@ yp = np.log2(xp)
 
 #Find the number of terms needed to meet the tolerance with the chebyshev fit
 tol = 1e-6
-n_tol, cheb_err = find_min_order(xp, yp, tol)
+n_tol, cheb_err_max = find_min_order(xp, yp, tol)
 
 #Evaluate the cheb fit and check the error
 n_cheb = n_tol
 A_cheb = cheb_mat(xp, n_cheb)
 params_cheb = cheb_fit(xp, yp, n_cheb, A_cheb)
 y_cheb = cheb_eval(A_cheb, params_cheb)
-print('Maximum error of polynomial fit: ', cheb_err)
+cheb_err_rms = rms_error(yp, y_cheb)
+print('Maximum error of Chebyshev fit: ', cheb_err_max)
+print('RMS error of polynomial fit: ', cheb_err_rms)
+
+#Calculate residuals
+cheb_res = yp - y_cheb
 
 #Evaluate the poly fit and check the error
 n_poly = n_tol
 [params_poly, y_poly] = poly_fit(xp, yp, n_poly)
-poly_err = fit_error(xp, yp, y_poly)
-print('Maximum error of polynomial fit: ', poly_err)
+poly_err_max = fit_error(yp, y_poly)
+poly_err_rms = rms_error(yp, y_poly)
+print('Maximum error of polynomial fit: ', poly_err_max)
+print('RMS error of polynomial fit: ', poly_err_rms)
+
+"""
+The chebyshev fit has a higher error than the polynomial error when considering 
+both the maximum error and the RMS error, by about 1 order of magnitude in each case
+"""
+
+#Calculate residuals
+poly_res = yp - y_poly
 
 
 #Plot the results
-plt.plot(xp, yp, '.k', label = 'Data')
-plt.plot(xp, y_poly, 'b', label = 'Polyfit')
-plt.plot(xp, y_cheb, 'r', label = 'Chebyshev Fit')
+fig, [ax1, ax2] = plt.subplots(2, 1, gridspec_kw={'height_ratios':[1,0.3]})
+ax1.plot(xp, yp, '.k', label = 'Data')
+ax1.plot(xp, y_poly, 'b', label = 'Polyfit')
+ax1.legend()
+ax1.set_title('Polynomial Fit')
+ax1.set_ylabel('f(x)')
+
+ax2.plot(xp, poly_res, 'b')
+ax2.set_ylabel('Residuals')
+ax2.set_xlabel('x')
 
 
+fig, [ax1, ax2] = plt.subplots(2, 1, gridspec_kw={'height_ratios':[1,0.3]})
+ax1.plot(xp, yp, '.k', label = 'Data')
+ax1.plot(xp, y_cheb, 'r', label = 'Chebyshev Fit')
+ax1.legend()
+ax1.set_title('Chebyshev Fit')
+ax1.set_ylabel('f(x)')
 
-
-    
-
-
-
-
-
-
-
+ax2.plot(xp, cheb_res, 'r')
+ax2.set_ylabel('Residuals')
+ax2.set_xlabel('x')
 
 
 
