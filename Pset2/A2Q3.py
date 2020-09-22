@@ -82,12 +82,23 @@ print('final values were ',ans_LSODA.y[0,-1])
 ratio_Pb_U = ans_Radau.y[14,:]/ans_Radau.y[0,:]
 ratio_Th_U = ans_Radau.y[4,:]/ans_Radau.y[3,:]
 
+"""
+The ratio of Pb-206 to U-238 climbs exponentially, which makes sense analytically as the quantity of product
+cascades exponentially down the chain of exponentially decaying species and there is no loss term for Pb-206
+in our model. Therefore Pb-206 will accumulate indefinitely as U-238 decays indefinitely.
+"""
 plt.figure()
 plt.plot(ans_Radau.t[0:-1], ratio_Pb_U[0:-1])
 plt.title('Ratio of Pb-206 to U-238')
 plt.xlabel('Time (s)')
 plt.ylabel('Ratio')
 
+"""
+The ratio of Th-230 to U-234 climbs asymptotically to an equilibrium value of ~0.3. This makes sense analytically as 
+U-234 will accumulate exponentially first while Th-230 is still close to zero, then after a delay Th-230 will also 
+accumulate exponentially. Eventually, their growth rates (and then decay rates after enough time passes) will be 
+roughly equal, coming to the equilibrium value observed here.
+"""
 plt.figure()
 plt.plot(ans_Radau.t[0:-1], ratio_Th_U[0:-1])
 plt.title('Ratio of Th-230 to U-234')
