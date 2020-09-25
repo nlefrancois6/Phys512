@@ -35,16 +35,19 @@ def cheb_mat(x, n):
     relation T_{n+1} = 2xT_{n}-T_{n-1}, T_{0} = 1, T_{1} = x
     """
     #Need to rescale this from -1 to 1 to 0.5 to 1! Rescale the input x values
-    x_rescaled = 0.25*x + 1
-    A = np.zeros([len(x_rescaled), n])
+    #Edit at 3:45pm Friday: tried a bunch of different ways to rescale them but
+    #none of them seemed to improve the residuals. Got some weird jagged residual results.
+    #So i removed the rescaling and decided to go with what I've got.
+    #x_rescaled = 0.25*x + 1
+    A = np.zeros([len(x), n])
     #T_{0} = 1
     A[:,0] = 1
     #T_{1} = x
     if n>1:
-        A[:,1] = x_rescaled
+        A[:,1] = x
     #T_{n+1} = 2xT_{n}-T_{n-1}
     for i in range(2, n):
-        A[:,i] = 2*x_rescaled*A[:,i-1] - A[:,i-2]
+        A[:,i] = 2*x*A[:,i-1] - A[:,i-2]
         
     return A
 
@@ -57,7 +60,6 @@ def cheb_fit(x, y, n, A):
     params: parameters for the chebyshev polynomial fit
     fit: values of the chebyshev polynomial fit at each x point
     """
-    x = 0.25*x + 1
     d = np.matrix(y).transpose()
     [u, s, vt] = np.linalg.svd(A, full_matrices = False)
     sinv = np.matrix(np.diag(1.0/s))
