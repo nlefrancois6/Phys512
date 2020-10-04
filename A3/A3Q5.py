@@ -44,7 +44,7 @@ def chi_squared(data, fit, error):
     error = np.asarray(error)  
     return sum((x-y)**2/error**2)
 
-def run_MCMC(y_data, func, params, err_y, chain_length, p_cov, tau):
+def run_MCMC(y_data, func, params, err_y, chain_length, p_cov, fixTau, tau_prior, err_tau_prior):
      j = 0
      chains_list = np.zeros([chain_length,len(params)])
      chi_sq_list = np.zeros(chain_length)
@@ -57,7 +57,8 @@ def run_MCMC(y_data, func, params, err_y, chain_length, p_cov, tau):
          d = np.dot(r, np.random.randn(r.shape[0]))
          params_guess = params + d*lamb
          #Only accept guesses with positive tau values
-         if params_guess[3]>0:
+         #if params_guess[3]>0:
+         if params_guess[3]>tau_prior-3*err_tau_prior and params_guess[3]<tau_prior+3*err_tau_prior:
              y_guess_update = func(params_guess, fixTau=tau)[2:len(y_data)+2]
              chi_sq_update = chi_squared(y_data, y_guess_update, err_y)
              delta_Chi = chi_sq_update - chi_sq
@@ -74,7 +75,7 @@ def run_MCMC(y_data, func, params, err_y, chain_length, p_cov, tau):
              chains_list[i,:] = params
              chi_sq_list[i] = chi_sq
          else:
-             print('Negative tau value rejected')
+             print('Tau value outside prior range rejected')
      return chains_list, chi_sq_list, params
      
 
@@ -84,6 +85,8 @@ multipole = wmap[:,0]; power = wmap[:,1]; errPower = wmap[:,2]
 
 #Specify our initial guess and other settings
 tau = False
+tau_prior = 0.0544
+err_tau_prior = 0.0073
 pars_initialGuess=np.asarray([65,0.02,0.1,0.05,2e-9,0.96])
 #Run-time is approx 10 steps per minute on Noah's laptop
 chainLength = 5000
@@ -91,11 +94,11 @@ chainLength = 5000
 p_cov=np.loadtxt('Q3_freeTau_cov.txt')
 
 #Run the MCMC
-[chain, chi_sq, params]=run_MCMC(power, get_spectrum, pars_initialGuess, errPower, chainLength, p_cov, tau)
+[chain, chi_sq, params]=run_MCMC(power, get_spectrum, pars_initialGuess, errPower, chainLength, p_cov, tau, tau_prior, err_tau_prior)
 
-np.savetxt('Q4_MCMC_outputChain', chain)
-np.savetxt('Q4_MCMC_outputChiSq', chi_sq)
-np.savetxt('Q4_MCMC_outputParams', params)
+np.savetxt('Q5_MCMC_outputChain', chain)
+np.savetxt('Q5_MCMC_outputChiSq', chi_sq)
+np.savetxt('Q5_MCMC_outputParams', params)
 
 
 
