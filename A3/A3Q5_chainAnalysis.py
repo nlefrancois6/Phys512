@@ -40,9 +40,9 @@ def get_spectrum(pars,lmax=2000, fixTau = False):
 wmap=np.loadtxt('wmap_tt_spectrum_9yr_v5.txt')
 multipole = wmap[:,0]; power = wmap[:,1]; errPower = wmap[:,2]
 #Load MCMC outputs
-chain = np.loadtxt('Q4_MCMC_outputChain_freeTau.txt')
-chi_sq = np.loadtxt('Q4_MCMC_outputChiSq_freeTau.txt')
-params = np.loadtxt('Q4_MCMC_outputParams_freeTau.txt')
+chain = np.loadtxt('Q5_MCMC_outputChain.txt')
+chi_sq = np.loadtxt('Q5_MCMC_outputChiSq.txt')
+params = np.loadtxt('Q5_MCMC_outputParams.txt')
 #parameter_labels = [r'H_0',r'$\omega_b h^2$',r'$\omega_c h^2',r'$\tau$',r'A_s','Slope']
 parameter_labels = ['H_0','O_b h^2','O_c h^2','tau','A_s','Slope']
 
@@ -54,7 +54,7 @@ chi_sq_comp = np.ma.masked_equal(chi_sq,0).compressed()
 chain_comp = np.zeros((len(chi_sq_comp),len(params)))
 
 #Plot the random walk of each parameter and mark the approximate end of the burn-in phase
-burn_in_end = 300
+burn_in_end = 250
 params_mean_burnedIn = np.zeros((len(params),1))
 params_std_burnedIn = np.zeros((len(params),1))
 f1 = plt.figure()
@@ -94,18 +94,26 @@ ax.legend()
 
 """
 Output:
-H_0  fit value  71.5 +/- 3.54
-O_b h^2  fit value  0.023 +/- 0.000741
-O_c h^2  fit value  0.11 +/- 0.0068
-tau  fit value  0.13 +/- 0.0355
-A_s  fit value  2.38e-09 +/- 1.41e-10
-Slope  fit value  0.989 +/- 0.0206
-Chi-Squared fit value  1.23e+03 +/- 4.77
+H_0  fit value  69.1 +/- 1.94
+O_b h^2  fit value  0.0224 +/- 0.000446
+O_c h^2  fit value  0.114 +/- 0.0047
+tau  fit value  0.0537 +/- 0.0132
+A_s  fit value  2.06e-09 +/- 6.48e-11
+Slope  fit value  0.968 +/- 0.0117
+Chi-Squared fit value  1.23e+03 +/- 2.67
 
-I think that the chain has converged because after the burn-in phase [NOT TRUE: each of the parameters 
-fluctuates roughly uniformly about the post-burn-in mean value as shown by the black dotted line.]
+I think that the chain has converged because after the burn-in phase each of the parameters 
+fluctuates roughly uniformly about the post-burn-in mean value as shown by the black dotted line.
 Similarly, the chi-squared value fluctuates very close to the post-burn-in mean value as shown by
-the relatively small standard deviation of 1230 +/- 4.77.
+the relatively small standard deviation of 1230 +/- 2.67.
+
+The fit results are mostly similar to those of the full chain in Q4, with tau being the only significantly
+different parameter between the two chains. However, the error bars are smaller by factors of ~2 for each
+of the parameters. 
+The number of samples is also smaller for this question as more steps were rejected out of the
+total runtime of 5000 steps due to the filtering of tau to be withing the measurement prior.
+This means that giving the prior information for tau significantly reduces both the total number of steps
+and the number of accepted steps necessary for the chain to converge.
 """
     
     
