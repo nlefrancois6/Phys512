@@ -102,10 +102,11 @@ A_s  fit value  2.38e-09 +/- 1.41e-10
 Slope  fit value  0.989 +/- 0.0206
 Chi-Squared fit value  1.23e+03 +/- 4.77
 
-I think that the chain has converged because after the burn-in phase [NOT TRUE: each of the parameters 
-fluctuates roughly uniformly about the post-burn-in mean value as shown by the black dotted line.]
-Similarly, the chi-squared value fluctuates very close to the post-burn-in mean value as shown by
-the relatively small standard deviation of 1230 +/- 4.77.
+I think that the chain has converged because after the burn-in phase the chi-squared value 
+fluctuates very close to the post-burn-in mean value as shown by the relatively 
+small standard deviation of 1230 +/- 4.77. 
+
+See A3Q4FitPlot.png and A3Q4ParametersChainPlot.png for output figures.
 """
     
     

@@ -102,18 +102,22 @@ A_s  fit value  2.06e-09 +/- 6.48e-11
 Slope  fit value  0.968 +/- 0.0117
 Chi-Squared fit value  1.23e+03 +/- 2.67
 
-I think that the chain has converged because after the burn-in phase each of the parameters 
-fluctuates roughly uniformly about the post-burn-in mean value as shown by the black dotted line.
-Similarly, the chi-squared value fluctuates very close to the post-burn-in mean value as shown by
-the relatively small standard deviation of 1230 +/- 2.67.
+I think that the chain has converged because after the burn-in phase the chi-squared value 
+fluctuates very close to the post-burn-in mean value as shown by the relatively small 
+standard deviation of 1230 +/- 2.67. 
 
 The fit results are mostly similar to those of the full chain in Q4, with tau being the only significantly
 different parameter between the two chains. However, the error bars are smaller by factors of ~2 for each
 of the parameters. 
+In comparison to Q4, the parameters in this chain fluctuate much more uniformly about their respective
+post-burn-in mean values as shown be the black dotted line. This reduced drift in the parameters is
+why the standard deviations (and therefore our calculated error bars) are smaller for Q5 than for Q4.
 The number of samples is also smaller for this question as more steps were rejected out of the
 total runtime of 5000 steps due to the filtering of tau to be withing the measurement prior.
 This means that giving the prior information for tau significantly reduces both the total number of steps
 and the number of accepted steps necessary for the chain to converge.
+
+See A3Q5FitPlot.png and A3Q5ParametersChainPlot.png for output figures.
 """
     
     
