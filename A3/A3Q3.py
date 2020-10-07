@@ -145,7 +145,7 @@ for i in range(len(paramsFix)):
 plt.xlabel('Multipole Moment')
 plt.ylabel('Power Spectrum')
 plt.title('Numerical Derivatives')
-plt.legend()
+plt.legend(loc='upper right')
 """
 This plot of the numerical derivative for each parameter across the data range shows that all of them
 stay within a few orders of magnitude, indicating that we should be okay with this dx size and it 
@@ -352,7 +352,7 @@ np.savetxt('Q3_freeTau_cov.txt', covFree)
 
 
 #Plot the data and the fit, as well as a convergence plot for Chi-Squared
-#plt.clf();
+
 #plt.errorbar(wmap[:,0],wmap[:,1],wmap[:,2],fmt='*')
 plt.plot(multipole,power,'.',label='Data')
 
