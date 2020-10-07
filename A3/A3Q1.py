@@ -39,7 +39,10 @@ paramsOpt, pcov = curve_fit(dishShapeLinear, xyData, zd, method='lm')
 zFit = dishShapeLinear(xyData, paramsOpt[0], paramsOpt[1], paramsOpt[2], paramsOpt[3])
 #Get the 1sigma errors for optimal parameters x0, y0, z0, a
 perr = np.sqrt(np.diag(pcov))
-print('The uncertainty in parameter a is +/-', perr[3])
+#print('The uncertainty in parameter a is +/-', f'{perr[3]:.3}')
+labels = ['x0','y0','z0','a']
+for i in range(len(paramsOpt)):
+    print(labels[i],' fit value ', f'{paramsOpt[i]:.3}','+/-', f'{perr[i]:.3}')
 
 """
 The focal length of a parabola is F=R^2/4a, where R is the dish radius at its rim
@@ -52,12 +55,26 @@ Dy = max(yd) - min(yd)
 Rx = Dx/2
 F = Rx**2/(4*paramsOpt[3])
 errF = np.sqrt(F**2*(perr[3]/paramsOpt[3])**2)
-print('The focal length is ', F, ' +/- ', errF)
+print('The focal length is ', f'{F:.6}', ' +/- ', f'{errF:.3}')
 
-"""
+
+#Plot the data points and the fit points at the same locations
 fig = plt.figure()
 ax = plt.axes(projection='3d')
 
 ax.scatter3D(xd, yd, zd, color = 'green')
 ax.scatter3D(xd, yd, zFit, color = 'blue')
+
+"""
+Output:
+    x0  fit value  -1.36 +/- 0.377
+    y0  fit value  58.2 +/- 0.359
+    z0  fit value  -1.51e+03 +/- 0.313
+    a  fit value  0.000167 +/- 6.48e-08
+    The focal length is  1.29798e+10  +/-  5.04e+06
+    
+    This is a very different number than the expected length of 1.5m. I'm really not confident about the 
+    geometry I used to calculate F as a function of the params, and I think that formula is probably
+    missing a conversion factor (possibly to convert back to the original units after the linearization
+    change of variables) which would explain the huge discrepancy.
 """

@@ -11,8 +11,8 @@ import camb
 from matplotlib import pyplot as plt
 
 #Provided example function to get the power spectrum from CAMB
-def get_spectrum(pars,lmax=2000):
-    print('pars are ',pars)
+def get_spectrum(pars,lmax=2000, fixTau = False):
+    #print('pars are ',pars)
     H0=pars[0]
     ombh2=pars[1]
     omch2=pars[2]
@@ -28,6 +28,7 @@ def get_spectrum(pars,lmax=2000):
     cmb=powers['total']
     tt=cmb[:,0]    #you could return the full power spectrum here if you wanted to do say EE
     return tt
+    
 #Calculate the chi squ value of a fit
 def chi_squared(data, fit, error):
     x = np.asarray(data)
@@ -61,3 +62,10 @@ plt.plot(cmb,label='Fit')
 plt.xlabel('Multipole Moment')
 plt.ylabel('Power Spectrum')
 plt.title('WMAP Satellite 9-year CMB Data')
+
+"""
+Output:
+    Chi squared for the given fit parameters is  1588.237646582676  
+    using the Gaussian, uncorrelated errors given
+    
+"""

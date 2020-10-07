@@ -8,7 +8,6 @@ Created on Thu Oct  1 11:20:29 2020
 
 import numpy as np
 import camb
-from matplotlib import pyplot as plt
 
 #Provided example function to get the power spectrum from CAMB
 def get_spectrum(pars,lmax=2000, fixTau = False):
@@ -93,9 +92,9 @@ p_cov=np.loadtxt('Q3_freeTau_cov.txt')
 #Run the MCMC
 [chain, chi_sq, params]=run_MCMC(power, get_spectrum, pars_initialGuess, errPower, chainLength, p_cov, tau)
 
-np.savetxt('Q4_MCMC_outputChain', chain)
-np.savetxt('Q4_MCMC_outputChiSq', chi_sq)
-np.savetxt('Q4_MCMC_outputParams', params)
+np.savetxt('Q4_MCMC_outputChain.txt', chain)
+np.savetxt('Q4_MCMC_outputChiSq.txt', chi_sq)
+np.savetxt('Q4_MCMC_outputParams.txt', params)
 
 
 
