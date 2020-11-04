@@ -44,10 +44,10 @@ name=[]
 tevent = []
 num_events = 4
 NP = 131072
-strain_h = np.zeros((num_events,131072))
-strain_l = np.zeros((num_events,131072))
-th = np.zeros((num_events,131072))
-tl = np.zeros((num_events,131072))
+strain_h = np.zeros((num_events,NP))
+strain_l = np.zeros((num_events,NP))
+th = np.zeros((num_events,NP))
+tl = np.zeros((num_events,NP))
 
 for eventname in events:
     event = events[eventname]
@@ -67,12 +67,13 @@ outputPlots = False
 
 #Parts a),b),c) combined to reduce # of for loops required
 #Hanford model
-strainWindowed_h = np.zeros((num_events,131072))
-noiseModel_h = np.zeros((num_events,int(131072/2)+1))
-window_th = np.zeros((num_events,131072))
-matchedFilter_h = np.zeros((num_events,131072))
-SNR_h = np.zeros((num_events,131072))
+strainWindowed_h = np.zeros((num_events,NP))
+noiseModel_h = np.zeros((num_events,int(NP/2)+1))
+window_th = np.zeros((num_events,NP))
+matchedFilter_h = np.zeros((num_events,NP))
+SNR_h = np.zeros((num_events,NP))
 SNRPeak_h = np.zeros(num_events)
+peakInd_h = np.zeros(num_events)
 
 time = dt*np.arange(NP)
 
@@ -113,17 +114,19 @@ for i in range(num_events):
     SNR_h[i,:] = matchedFilter_h[i,:]*(np.fft.irfft(np.conj(whiten_template))*np.fft.irfft(whiten_template))
     #Get the index of the peak in the SNR
     timeSNRPeak_ind = np.argmax(np.abs(SNR_h[i,:]))
+    peakInd_h[i] = timeSNRPeak_ind
     timeSNRPeak = time[timeSNRPeak_ind]
     SNRPeak_h[i] = np.abs(SNR_h[i,timeSNRPeak_ind])
     print('Hanford Event ' + name[i] + ' SNR = ' + str(SNRPeak_h[i]))
 
 #Livingston model
-strainWindowed_l = np.zeros((num_events,131072))
-noiseModel_l = np.zeros((num_events,int(131072/2)+1))
-window_tl = np.zeros((num_events,131072))
-matchedFilter_l = np.zeros((num_events,131072))
-SNR_l = np.zeros((num_events,131072))
+strainWindowed_l = np.zeros((num_events,NP))
+noiseModel_l = np.zeros((num_events,int(NP/2)+1))
+window_tl = np.zeros((num_events,NP))
+matchedFilter_l = np.zeros((num_events,NP))
+SNR_l = np.zeros((num_events,NP))
 SNRPeak_l = np.zeros(num_events)
+peakInd_l = np.zeros(num_events)
 
 for i in range(num_events):
     NP = len(strain_l[i,:])
@@ -162,6 +165,7 @@ for i in range(num_events):
     SNR_l[i,:] = matchedFilter_l[i,:]*(np.fft.irfft(np.conj(whiten_template))*np.fft.irfft(whiten_template))
     #Get the index of the peak in the SNR
     timeSNRPeak_ind = np.argmax(np.abs(SNR_l[i,:]))
+    peakInd_l[i] = timeSNRPeak_ind
     timeSNRPeak = time[timeSNRPeak_ind]
     SNRPeak_l[i] = np.abs(SNR_l[i,timeSNRPeak_ind])
     print('Livingston Event ' + name[i] + ' SNR = ' + str(SNRPeak_l[i]))
@@ -216,8 +220,114 @@ Livingston Event GW170104
 Matched Filter Scatter SNR = 9.55590230198362
 Noise Model SNR = 0.8276815740714171
 """
+
+#E) Find the frequency from each event where half the weight comes from above that frequency and half below
+for i in range(num_events):
+    #Hanford event
+    #Get the whitened template for the event
+    templateFT = np.fft.rfft(window_th[i,:])
+    whiten_template = np.abs(templateFT/np.sqrt(noiseModel_h[i,:]))
+    #Get the cumulative distribution function of whiten_template at each entry
+    runningTotalWeight = np.cumsum(whiten_template)/np.sum(whiten_template)
+    #Find the frequency where the CDF is closest to 1/2
+    halfWeight_ind = np.argmin(np.abs(runningTotalWeight - 1/2))
+    halfWeight_freq = np.fft.rfftfreq(NP, dt)[halfWeight_ind]
+    print('Hanford Event ' + name[i] + '\nHalf-Weight Frequency = ' + str(halfWeight_freq) + ' Hz')
+    #Livingston Event
+    #Get the whitened template for the event
+    templateFT = np.fft.rfft(window_tl[i,:])
+    whiten_template = np.abs(templateFT/np.sqrt(noiseModel_l[i,:]))
+    #Get the cumulative distribution function of whiten_template at each entry
+    runningTotalWeight = np.cumsum(whiten_template)/np.sum(whiten_template)
+    #Find the frequency where the CDF is closest to 1/2
+    halfWeight_ind = np.argmin(np.abs(runningTotalWeight - 1/2))
+    halfWeight_freq = np.fft.rfftfreq(NP, dt)[halfWeight_ind]
+    print('Livingston Event ' + name[i] + '\nHalf-Weight Frequency = ' + str(halfWeight_freq) + ' Hz')
+
+
+"""
+Output:
+Hanford Event GW150914
+Half-Weight Frequency = 125.0 Hz
+Livingston Event GW150914
+Half-Weight Frequency = 133.78125 Hz
+Hanford Event LVT151012
+Half-Weight Frequency = 115.15625 Hz
+Livingston Event LVT151012
+Half-Weight Frequency = 129.375 Hz
+Hanford Event GW151226
+Half-Weight Frequency = 133.09375 Hz
+Livingston Event GW151226
+Half-Weight Frequency = 172.375 Hz
+Hanford Event GW170104
+Half-Weight Frequency = 125.09375 Hz
+Livingston Event GW170104
+Half-Weight Frequency = 113.125 Hz
+"""
+
+#F) How well can we localize the time of arrival, ie find the error on timePeak?
+xErr_h = np.zeros(num_events)
+xErr_l = np.zeros(num_events)
+tErr_h = np.zeros(num_events)
+tErr_l = np.zeros(num_events)
+for i in range(num_events):
+    #Find uncertainties for the Hanford event
+    timeSNRPeak_ind = int(peakInd_h[i])
+    timeSNRPeak = time[timeSNRPeak_ind]
+    SNRPeak = SNRPeak_h[i]
+    halfMax_SNR = SNRPeak/2
+    halfMax_ind = np.argmin(np.abs(np.abs(SNR_h[i,:])-halfMax_SNR))
+    #Time error is the width at half maximum of the SNR peak
+    tErr_h[i] = 2*np.abs(timeSNRPeak-time[halfMax_ind])
+    #Spatial error is the time error times the speed of light (ie the speed of the signal)
+    xErr_h[i] = tErr_h[i]*3*10**8
+    print('Hanford Event ' + name[i] + '\nTime Uncertainty = ' + str(tErr_h[i]) + 's' + '\nPosition Uncertainty = ' + str(xErr_h[i]/10**3) + 'km')
     
     
+    #Find uncertainties for the Livingston event
+    timeSNRPeak_ind = int(peakInd_l[i])
+    timeSNRPeak = time[timeSNRPeak_ind]
+    SNRPeak = SNRPeak_l[i]
+    halfMax_SNR = SNRPeak/2
+    halfMax_ind = np.argmin(np.abs(np.abs(SNR_l[i,:])-halfMax_SNR))
+    #Time error is the width at half maximum of the SNR peak
+    tErr_l[i] = 2*np.abs(timeSNRPeak-time[halfMax_ind])
+    #Spatial error is the time error times the speed of light (ie the speed of the signal)
+    xErr_l[i] = tErr_l[i]*3*10**8
+    print('Livingston Event ' + name[i] + '\nTime Uncertainty = ' + str(tErr_l[i]) + 's' + '\nPosition Uncertainty = ' + str(xErr_l[i]/10**3) + 'km')
+    print('Combined Positional Uncertainty = ' + str(xErr_h[i]/1000 + xErr_l[i]/1000) + 'km')
+    
+"""
+Output:
+Hanford Event GW150914
+Time Uncertainty = 0.06982421875s
+Position Uncertainty = 20947.265625km
+Livingston Event GW150914
+Time Uncertainty = 0.14501953125s
+Position Uncertainty = 43505.859375km
+Combined Positional Uncertainty = 64453.125km
+Hanford Event LVT151012
+Time Uncertainty = 0.0107421875s
+Position Uncertainty = 3222.65625km
+Livingston Event LVT151012
+Time Uncertainty = 0.0009765625s
+Position Uncertainty = 292.96875km
+Combined Positional Uncertainty = 3515.625km
+Hanford Event GW151226
+Time Uncertainty = 0.00244140625s
+Position Uncertainty = 732.421875km
+Livingston Event GW151226
+Time Uncertainty = 0.001953125s
+Position Uncertainty = 585.9375km
+Combined Positional Uncertainty = 1318.359375km
+Hanford Event GW170104
+Time Uncertainty = 0.0068359375s
+Position Uncertainty = 2050.78125km
+Livingston Event GW170104
+Time Uncertainty = 0.13134765625s
+Position Uncertainty = 39404.296875km
+Combined Positional Uncertainty = 41455.078125km
+"""
     
     
     
