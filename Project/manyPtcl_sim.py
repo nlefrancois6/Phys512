@@ -15,24 +15,25 @@ import NBody_systemInitialize as syst
 import NBody_sim as nbod
 
 #Number of ptcls
-N = 10^5
+N = 10**4
 #Grid dimensions (must be square for now)
-LX = 512
-LY = 512
+LX = 128
+LY = 128
 size = (LY, LX)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 50
+T = 5000
 nsteps = int(T/h)
 
 #Initialize particle position, velocity, and mass
 x0 = None
 v0 = None
-m0 = [10**(-6) for t in range(N)]
+m = 1/N
+m0 = [m for t in range(N)]
 
 #Initialize the system of N particles
-system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0)
+system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, boundaryCondition='Periodic')
 
 #Initialize the simulation for our system of N particles
 sim = nbod.NBody_solver(size,system,h)
@@ -58,6 +59,15 @@ for t in range(nsteps):
     E, x = sim.advance_timeStep()
     rho_store[t+1,:,:] = sim.rho
     E_store[t] = sim.E
+    
+showEnergyPlot = True
+if showEnergyPlot == True:
+    plt.figure()
+    plt.plot(E_store)
+    plt.title('System Total Energy')
+    plt.xlabel('Time')
+    plt.ylabel('Total Energy')
+    
 #Define the function used to update the animation at each frame
 def animate(i):
     #Only update the plot for integer t
@@ -65,23 +75,16 @@ def animate(i):
         #global rho_store
         plt.title('Density Field at t = '+ str(i*h))
         #This is where new data is inserted into the plot.
-        plt.pcolormesh(rho_store[i,:,:], cmap = cm.inferno)
+        plt.pcolormesh(rho_store[i,:,:], cmap = cm.plasma)
         #plt.pause(0.1)
 #Initialize the figure
 fig = plt.figure()
-plt.pcolormesh(sim.rho, cmap = cm.inferno)
+plt.pcolormesh(sim.rho, cmap = cm.plasma)
 plt.colorbar()
 
 #Run the simulation and generate the animation from it
 anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
-#plt.show()
-anim.save('Part3_periodic.gif', writer='imagemagick')
+plt.show()
+#anim.save('Part3_periodic.gif', writer='imagemagick')
 
 #anim.save('Test.gif', writer='imagemagick')
-showEnergyPlot = False
-if showEnergyPlot == True:
-    plt.figure()
-    plt.plot(E_store)
-    plt.title('System Total Energy')
-    plt.xlabel('Time')
-    plt.ylabel('Total Energy')
