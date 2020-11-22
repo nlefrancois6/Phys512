@@ -19,14 +19,14 @@ class ptcl:
         self.v = (vx, vy)
 
 class Nparticle_system:
-    def __init__(self, N, size, set_m0, set_x0 = None, set_v0 = None, boundaryCondition = 'Periodic', soft = None, cosmos = False):
+    def __init__(self, N, size, set_m0, set_x0 = None, set_v0 = None, boundaryCondition = 'Periodic', soft = None, cosmology_mass = False):
         """
         Initialize a system of N particles with grid dimensions specified by 'size' 
         Can specify initial values for mass, position and velocity
         """
         self.N = N
         self.size = size
-        self.cosmos = cosmos
+        self.cosmology_mass = cosmology_mass
         self.BC = boundaryCondition
         
         #Initialize x, v, m and assign these ICs to a list of particles
@@ -106,8 +106,9 @@ class Nparticle_system:
         """
         Get the initial values for mass either set directly by the user or for the cosmos == True case (explain what this means)
         """  
-        if self.cosmos == False:
+        if self.cosmology_mass == False:
             self.m = np.array(set_m0.copy()).T
+            print(np.asarray(self.m).shape)
         else:
             #Relocate particles onto the nearest gridpoint
             self.x = np.rint(self.x).astype('int') % self.size[0]
@@ -119,8 +120,11 @@ class Nparticle_system:
             k[k<soft] = soft
             #Find effective mass
             m0 = set_m0/k**3
+            #print('get_m0 outputs')
+            #print(m0)
             
             self.m = np.array([m0.copy()]).T
+            #print(np.asarray(self.m).shape)
                 
                 
                 

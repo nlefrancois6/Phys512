@@ -153,8 +153,12 @@ class NBody_solver:
         I'd eventually like to replace the leap frog with some high-order method but this will do for now
         """
         #velocity update step
-        self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m
-        self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m
+        #print('leapfrog outputs')
+        #print(self.m[:,0])
+        #print(self.F[:,0])
+        #print(self.v[:,0])
+        self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m[:,0]
+        self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m[:,0]
         #position update steps
         self.x = self.x+self.v*self.dt
         self.x = self.x%self.size[0]
