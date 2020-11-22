@@ -34,8 +34,6 @@ class NBody_solver:
         self.dt = dt
         self.x = particles.x
         self.v = particles.v
-        print(self.x)
-        print(self.v)
         self.m = particles.m
         x, y = np.linspace(0, self.size[0]-1, self.size[0]), np.linspace(0, self.size[1]-1, self.size[1])
         self.mesh = np.array(np.meshgrid(x,y))
@@ -108,8 +106,7 @@ class NBody_solver:
             psi[0,-1] = 0
             psi[-1:,-1] = 0
             psi[-1:,0] = 0 
-        #probably better to set self.psi = psi here for later access
-        #return psi
+
         self.psi = psi
     
     def get_Forces(self):
@@ -122,10 +119,11 @@ class NBody_solver:
         F_gp = np.zeros([2,self.size[0],self.size[1]])
         self.get_Potential()
         #Central differencing to get force field on the grid points 
+        #Could replace this with a higher order scheme
         #np.roll(x,n,axis=0) shifts the array entries of x by n indices along axis 0
-        F_gp[0] = -0.5*self.G*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
-        F_gp[1] = -0.5*self.G*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
-        F_gp = self.rho*F_gp
+        F_gp[0] = 0.5*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
+        F_gp[1] = 0.5*(np.roll(self.psi,1,axis=1)-np.roll(self.psi,-1,axis=1))
+        F_gp = -self.G*self.rho*F_gp
         #Apply the force to each particle
         F_ptcls = np.moveaxis(F_gp,0,-1)
         F = F_ptcls[self.x_indexList]

@@ -8,7 +8,6 @@ Created on Fri Nov  6 18:01:33 2020
 
 import random as rn
 import numpy as np
-import matplotlib.pyplot as plt
 
 class ptcl:
     def __init__(self, m, x, y, vx=0, vy=0):
@@ -61,6 +60,20 @@ class Nparticle_system:
             #Generate and store the remaining un-set initial positions
             for j in range(self.N - numICs_set):
                 IC.append((rn.random()*(self.size[0]-1), rn.random()*(self.size[1]-1)))
+        elif self.BC == 'Non-Periodic':
+            xmin,xmax = 1,self.size[0]-1
+            IC = []
+            if set_x0 is None: 
+                numICs_set = 0
+            else: 
+                numICs_set = len(set_x0)
+                for i in range(numICs_set):
+                    if set_x0[i][0].max()>xmax or set_x0[i][1].max()>xmax or set_x0[i][0].min()<xmin or set_x0[i][1]<xmin: 
+                        raise ValueError(f'The position of the Particle must be within the boundary of 1 to {self.size[0]-1}')
+                        
+                    IC.append((set_x0[i][0], set_x0[i][1]))
+            for j in range(self.N - numICs_set):
+                IC.append((rn.uniform(1.0001,self.size[0]-1.0001), rn.uniform(1.0001,self.size[1]-1.0001)))
             
             self.x = np.asarray(IC)
     
@@ -86,7 +99,7 @@ class Nparticle_system:
                 
     def get_m0(self, set_m0, soft = None):
         """
-        Get the initial values for velocity either set directly by the user or for the cosmos == True case (explain what this means)
+        Get the initial values for mass either set directly by the user or for the cosmos == True case (explain what this means)
         """  
         if self.cosmos == False:
             self.m = np.array(set_m0.copy()).T
