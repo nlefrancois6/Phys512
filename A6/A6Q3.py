@@ -32,17 +32,18 @@ xe = xe/max(xe) #Normalize to [0,1]
 t2 = time.time()
 print('Run-time:',t2-t1)
 
-efficiency = len(xe)/N
+n_uniform_used = 2*N
+efficiency = len(xe)/n_uniform_used
 print('Generator Efficiency:', efficiency)
 
 """
-N_in = 10**6, N_out = 423 614
-Run-time: 0.2035210132598877
-Generator Efficiency: 0.423614
+N_in = 10**6, N_out = 423 589 
+Run-time: 0.142103910446167
+Generator Efficiency: 0.2117945
 
-N_in = 10**8, N_out = 423 614
-Run-time: 29.858998775482178
-Generator Efficiency: 0.42322922
+N_in = 10**8, N_out = 42 329 645
+Run-time: 25.071380853652954
+Generator Efficiency: 0.211648225
 
 """
 

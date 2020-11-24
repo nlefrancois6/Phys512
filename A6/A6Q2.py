@@ -29,7 +29,7 @@ def power(x, a):
 
 
 #options 'Gaussian','Lorentzian','Power'
-sampleDist = 'Power'
+sampleDist = 'Gaussian'
 
 N = 10**6
 
@@ -37,9 +37,9 @@ if sampleDist == 'Gaussian':
     #Calculate c s.t. e/g <= c
     x = np.linspace(-1,1,1000)
     mu = 0
-    sig = 0.3
+    sig = 0.4
     g = gauss(x,mu,sig)
-    a = 2
+    a = 3
     e = exp(x,a)
     e = e/max(e)
     c = max(e/g)
@@ -49,58 +49,57 @@ if sampleDist == 'Gaussian':
 
     xg = np.random.normal(mu, sig, N)
     xu = 2*np.random.rand(N) - 1
-
-    gx = gauss(xg,mu,sig)
-    ex = exp(xu,a)
-    critx = ex/(c*gx)
-    crit_met_x = np.abs(xu) < critx
-
     yg = np.random.normal(mu, sig, N)
     yu = 2*np.random.rand(N) - 1
-
-    gy = gauss(yg,mu,sig)
-    ey = exp(yu,a)
-    crity = ey/(c*gy)
-    crit_met_y = np.abs(yu) < crity
+    
+    rg = np.sqrt(xg**2+yg**2)
+    ru = np.sqrt(xu**2+yu**2)
+    
+    gr = gauss(rg,mu,sig)
+    er = exp(ru,a)
+    crit = er/(c*gr)
+    crit_met = np.abs(ru) < crit
+    
+    num_uniform_used = 4*N
+    
 
 elif sampleDist == 'Lorentzian':
     #Calculate c s.t. e/g <= c
     x = np.linspace(-1,1,1000)
     x0 = 0
-    gamma = 1
+    gamma = 2
     g = lorentz(x,x0,gamma)
     g = g/max(g)
-    a = 0.05
+    a = 0.01
     e = exp(x,a)
     e = e/max(e)
     c = max(e/g)
 
     plt.plot(x,g)
     plt.plot(x,e)
-
-    xg = np.random.standard_cauchy(N)
+    
+    xl = np.random.standard_cauchy(N)
     xu = 2*np.random.rand(N) - 1
-
-    gx = lorentz(xg,x0,gamma)
-    ex = exp(xu,a)
-    critx = ex/(c*gx)
-    crit_met_x = np.abs(xu) < critx
-
-    yg = np.random.standard_cauchy(N)
+    yl = np.random.standard_cauchy(N)
     yu = 2*np.random.rand(N) - 1
-
-    gy = lorentz(yg,x0,gamma)
-    ey = exp(yu,a)
-    crity = ey/(c*gy)
-    crit_met_y = np.abs(yu) < crity
+    
+    rl = np.sqrt(xl**2+yl**2)
+    ru = np.sqrt(xu**2+yu**2)
+    
+    lr = lorentz(rl,x0,gamma)
+    er = exp(ru,a)
+    crit = er/(c*lr)
+    crit_met = np.abs(ru) < crit
+    
+    num_uniform_used = 4*N
     
 elif sampleDist == 'Power':
     #Calculate c s.t. e/g <= c
     x = np.linspace(-1,1,1000)
-    p = 4
+    p = 2
     g = power(x,p)
     g = g/max(g)
-    a = 2
+    a = 3
     e = exp(x,a)
     e = e/max(e)
     c = max(e/g)
@@ -111,45 +110,42 @@ elif sampleDist == 'Power':
     #Power Law Dist
     xL = np.random.power(p, int(N/2)) - 1
     xR = 1 - np.random.power(p, int(N/2))
-    xg = np.append(xL, xR)
-    np.random.shuffle(xg)
-    
+    xp = np.append(xL, xR)
+    np.random.shuffle(xp)
     xu = 2*np.random.rand(N) - 1
-
-    gx = power(xg,p)
-    ex = exp(xu,a)
-    critx = ex/(c*gx)
-    crit_met_x = np.abs(xu) < critx
-
+    
     yL = np.random.power(p, int(N/2)) - 1
     yR = 1 - np.random.power(p, int(N/2))
-    yg = np.append(yL, yR)
-    #np.random.shuffle(yg)
-    
+    yp = np.append(yL, yR)
     yu = 2*np.random.rand(N) - 1
+    
+    rp = np.sqrt(xp**2+yp**2)
+    ru = np.sqrt(xu**2+yu**2)
+    
+    pr = power(rp,p)
+    er = exp(ru,a)
+    crit = er/(c*pr)
+    crit_met = np.abs(ru) < crit
+    
+    num_uniform_used = 4*N
 
-    gy = power(yg,p)
-    ey = exp(yu,a)
-    crity = ey/(c*gy)
-    crit_met_y = np.abs(yu) < crity
+
+#Drop the rejected values
+xe = xu[xu*crit_met != 0] 
+ye = yu[yu*crit_met != 0]
+#Normalize to [0,1]
+xe = xe/max(xe) 
+ye = ye/max(ye)
 
 
-xe = []
-ye = []
-for i in range(N):
-    if crit_met_x[i]:
-        xe.append(xu[i])
-    if crit_met_y[i]:
-        ye.append(yu[i])
-
-numVars = min([len(xe),len(ye)])
-efficiency = numVars/N
+numVars = len(xe) #xe=ye always, now that we're accepting based on r not x&y independently
+efficiency = 2*numVars/num_uniform_used #Should actually replace N with num_uniform_used
 print('Efficiency: ', efficiency)
 
 
 plt.figure()
 plt.subplot(131)
-plt.plot(xe[:numVars],ye[:numVars],',')
+plt.plot(xe,ye,',') #These should be the same now that we're accepting based on r not x&y
 plt.title('Exponential from ' + sampleDist)
 
 plt.subplot(132)
