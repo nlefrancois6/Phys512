@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov  9 20:52:45 2020
-
 @author: noahlefrancois
 """
 
@@ -21,9 +20,9 @@ LX = 128
 LY = 128
 size = (LY, LX)
 #Time step size
-h = 10**0
+h = 10**1
 #Final time and number of time steps
-T = 10
+T = 50
 nsteps = int(T/h)
 
 #Initialize particle position, velocity, and mass
@@ -31,12 +30,13 @@ x0 = None
 v0 = None
 m = 1/N
 m0 = [m for t in range(N)]
+cmass = False
 
 #Initialize the system of N particles
-system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft = 0.8, boundaryCondition='Periodic')
+system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, boundaryCondition='Periodic', soft=0.1, cosmology_mass=cmass)
 
 #Initialize the simulation for our system of N particles
-sim = nbod.NBody_solver(size,system,h, soft = 0.8)
+sim = nbod.NBody_solver(size,system,h, cosmology_mass=cmass)
 
 #Run the simulation
 
@@ -54,8 +54,6 @@ Should theoretically be easy to save anim after but it's giving a 'list index ou
 """
 
 #Use advance_timeStep() nsteps-many times
-#maybe try to speed up this for loop with numba, but I don't think it's 
-#an expensive operation relative to advance_timeStep()
 for t in range(nsteps):
     #Store density field and energy
     E, x = sim.advance_timeStep()
