@@ -21,9 +21,9 @@ LX = 128
 LY = 128
 size = (LY, LX)
 #Time step size
-h = 10**1
+h = 10**0
 #Final time and number of time steps
-T = 5000
+T = 10
 nsteps = int(T/h)
 
 #Initialize particle position, velocity, and mass
@@ -33,10 +33,10 @@ m = 1/N
 m0 = [m for t in range(N)]
 
 #Initialize the system of N particles
-system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, boundaryCondition='Periodic')
+system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft = 0.8, boundaryCondition='Periodic')
 
 #Initialize the simulation for our system of N particles
-sim = nbod.NBody_solver(size,system,h)
+sim = nbod.NBody_solver(size,system,h, soft = 0.8)
 
 #Run the simulation
 
@@ -54,6 +54,8 @@ Should theoretically be easy to save anim after but it's giving a 'list index ou
 """
 
 #Use advance_timeStep() nsteps-many times
+#maybe try to speed up this for loop with numba, but I don't think it's 
+#an expensive operation relative to advance_timeStep()
 for t in range(nsteps):
     #Store density field and energy
     E, x = sim.advance_timeStep()

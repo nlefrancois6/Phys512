@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Nov  6 18:01:33 2020
-
 @author: noahlefrancois
 """
 
@@ -82,15 +81,20 @@ class Nparticle_system:
         Get the initial values for velocity either set directly by the user or by random generation
         """     
         IC = []
+        #print(set_v0)
         if set_v0 is None:
+            #print('none')
             #If no initial velocities set, we don't need to store any (all will be generated below)
             numICs_set = 0
-        elif set_v0 == 0:
+        #This triggers even when they aren't zeros; could try elif set_v0 == False maybe? might not be worth it
+        #elif set_v0.all() == 0:
+         #   print('zeros')
             #Set all velocities to zero
-            for i in range(self.N):
-                numICs_set = 0
-                IC.append((0, 0))
+          #  for i in range(self.N):
+           #     numICs_set = 0
+            #    IC.append((0, 0))
         else:
+            #print('else')
             #If the user has set some (or all) of the initial positions, get those and store them
             numICs_set = len(set_v0)
             for i in range(numICs_set):
@@ -108,7 +112,7 @@ class Nparticle_system:
         """  
         if self.cosmology_mass == False:
             self.m = np.array(set_m0.copy()).T
-            print(np.asarray(self.m).shape)
+            #print(np.asarray(self.m).shape)
         else:
             #Relocate particles onto the nearest gridpoint
             self.x = np.rint(self.x).astype('int') % self.size[0]
@@ -125,7 +129,3 @@ class Nparticle_system:
             
             self.m = np.array([m0.copy()]).T
             #print(np.asarray(self.m).shape)
-                
-                
-                
-        

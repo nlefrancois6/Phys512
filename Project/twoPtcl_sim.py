@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov  9 21:06:45 2020
-
 @author: noahlefrancois
 """
 
@@ -18,8 +17,8 @@ import NBody_sim as nbod
 #Number of ptcls
 N = 2
 #Grid dimensions (must be square for now)
-LX = 512
-LY = 512
+LX = 128
+LY = 128
 size = (LY, LX)
 #Time step size
 h = 10**1
@@ -31,9 +30,10 @@ nsteps = int(T/h)
 x0 = np.array([[LY/2, LX/2 - 10],[LY/2, LX/2 + 10]]) #Note first value is x_y, second is x_x
 v0 = np.array([[0.1,0],[-0.1,0]]) #Ptcl initially at rest. Note first value is v_y, second is v_y
 m0 = [10 for t in range(N)]
+#cmass = False
 
 #Initialize the system of N particles
-system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft=0.1, boundaryCondition = 'Non-Periodic')
+system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft=0.1, boundaryCondition = 'Non-Periodic',)
 #Initialize the simulation for our system of N particles
 sim = nbod.NBody_solver(size,system,h, soft=0.1)
 
@@ -81,4 +81,3 @@ plt.colorbar()
 anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
 plt.show()
 #anim.save('Part2.gif', writer='imagemagick')
-

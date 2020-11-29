@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Nov  6 11:57:02 2020
-
 @author: noahlefrancois
 """
 
 import numpy as np
 
 class NBody_solver:
-    def __init__(self,size,particles,dt,soft=0.1,G=1,boundaryCondition='Periodic'):
+    def __init__(self,size,particles,dt,soft=0.1,G=1,boundaryCondition='Periodic', cosmology_mass=False):
         """
         The NBody class that specifies the simulation. 
         Input(s):
@@ -22,13 +21,13 @@ class NBody_solver:
         """
 
         self.BC = boundaryCondition
-
         #For non-periodic conditions, the grid is padded to double the actual size 
         #with empty space to avoid wrap-around effects.
         if self.BC == 'Non-Periodic':
             self.size = (2*size[0],2*size[1])   
         else:
             self.size = size
+        self.cosmology_mass = cosmology_mass
         self.soft = soft
         self.G = G
         self.dt = dt
@@ -139,6 +138,9 @@ class NBody_solver:
          #   vTot[p] = np.sqrt(self.v[p][0]**2 + self.v[p][1]**2)
         vTot = np.sqrt(self.v[:,0]**2 + self.v[:,1]**2)
         #print(self.m.shape)
+        #print(self.v)
+        #print(vTot)
+        #print(vTot.shape)
         KE = np.sum(self.m*vTot**2)
         #Would be nice to take psi & rho as inputs to avoid calculating them redundantly
         psi = self.psi
@@ -154,11 +156,13 @@ class NBody_solver:
         """
         #velocity update step
         #print('leapfrog outputs')
-        #print(self.m[:,0])
-        #print(self.F[:,0])
-        #print(self.v[:,0])
-        self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m[:,0]
-        self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m[:,0]
+        #print(self.m.shape)
+        if self.cosmology_mass:
+            self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m[:,0]
+            self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m[:,0]
+        else:
+            self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m
+            self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m
         #position update steps
         self.x = self.x+self.v*self.dt
         self.x = self.x%self.size[0]
@@ -200,4 +204,3 @@ class NBody_solver:
         """
                 
         return self.E, self.x
-
