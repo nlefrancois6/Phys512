@@ -26,10 +26,20 @@ Baseline:
 fast_histogram:
     Size 128, t = 0.0043141841888427734
     Size 512, t = 0.04168510437011719
+    useful, will make this change
 
-:
-    Size 128, t = 
-    Size 512, t =
+Scipy fft in NBody_sim:
+    Size 128, t = 0.0034177303314208984
+    Size 512, t = 0.022250890731811523
+    useful, will make this change
+    
+Scipy fft in NBody_systemInitialize (timed initialization):
+    Size 128, numpy: 0.5634071826934814
+    Size 128, scipy: 0.5464169979095459
+    Size 512, numpy: 0.6636438369750977
+    Size 512, scipy: 0.5789480209350586
+    inconclusive, will not make this change
+    Also only applies with cmass=True
 """
 
 #Number of ptcls
@@ -39,9 +49,9 @@ LX = 512
 LY = 512
 size = (LY, LX)
 #Time step size
-h = 10**0
+h = 10**1
 #Final time and number of time steps
-T = 50
+T = 200
 nsteps = int(T/h)
 
 #Initialize particle position, velocity, and mass
@@ -50,7 +60,7 @@ v0 = None
 #v0 = np.array([[0,0] for t in range(N)]) #Initially all at rest IC
 m = 1/N
 m0 = [m for t in range(N)]
-cmass = True
+cmass = False
 
 #Initialize the system of N particles
 t1 = time.time()

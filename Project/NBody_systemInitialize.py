@@ -33,13 +33,6 @@ class Nparticle_system:
         self.get_v0(1, set_v0)
         self.get_m0(set_m0, soft)
         self.particles = np.asarray([ptcl(m,x[0],x[1],vx=v[0],vy=v[1]) for m,x,v in zip(self.m,self.x,self.v)])
-        
-        #Not sure if these lines are redundant or not since they should be set already in the block above
-        """
-        self.x = np.asarray([self.particles[i].x for i in range(N)])
-        self.v = np.asarray([self.particles[i].v for i in range(N)])
-        self.get_m0(set_m0, soft)
-        """
     
     
     def get_x0(self, set_x0 = None):

@@ -6,6 +6,8 @@ Created on Fri Nov  6 11:57:02 2020
 """
 
 import numpy as np
+from fast_histogram import histogram2d
+#from scipy.fft import rfft, irfft
 
 class NBody_solver:
     def __init__(self,size,particles,dt,soft=0.1,G=1,boundaryCondition='Periodic', cosmology_mass=False):
@@ -46,15 +48,21 @@ class NBody_solver:
         """
        #Get nearest gridpoint index
         self.x_ind = np.rint(self.x).astype('int') % self.size[0]
-        
         #Store the grid of particle indices to access later
         self.x_indexList = tuple(self.x_ind[:, i] for i in range(2))
-        
         #Add up the contributions of all particles to get the total density at each grid point
         x_gridpoints = np.linspace(0, self.size[0]-1, self.size[0]+1)
         bin_coords = np.repeat([x_gridpoints], 2, axis=0)
-        GP_densities = np.histogramdd(self.x_ind, bins = bin_coords, weights = self.m.flatten())
-        self.rho = GP_densities[0]
+        #Bin info inputs for fast_histogram. Not sure if x,y are in the right order but it shouldn't matter for a square grid
+        x_min = min(bin_coords[0]); x_max = max(bin_coords[0])+0.1
+        y_min = min(bin_coords[1]); y_max = max(bin_coords[1])+0.1
+        hist_range = [(x_min, x_max), (y_min, y_max)]
+        
+        #GP_densities = np.histogramdd(self.x_ind, bins = bin_coords, weights = self.m.flatten())
+        #self.rho = GP_densities[0]
+        
+        GP_densities = histogram2d(self.x_ind[:,0], self.x_ind[:,1], self.size, hist_range, weights = self.m.flatten())
+        self.rho = GP_densities
         
     def get_greensFunc(self):
         """
@@ -93,7 +101,15 @@ class NBody_solver:
         
         psi_FFT = rho_FFT*green_FFT
         psi = np.fft.irfftn(psi_FFT)
-
+        
+        """
+        This is wrong and fucks my shit up
+        rho_FFT = rfft(self.rho)
+        green_FFT = rfft(self.green)
+        
+        psi_FFT = rho_FFT*green_FFT
+        psi = irfft(psi_FFT)
+        """
         #Shift psi back to the centre of the ptcls (not sure about this step)
         for i in range(2):
             psi = 0.5*(np.roll(psi,1,axis=i)+psi)
@@ -132,15 +148,7 @@ class NBody_solver:
         """
         Track the total energy of the system as the sum of the kinetic and potential energies
         """
-        #print(len(self.v))
-        #vTot = np.empty(len(self.v))
-        #for p in range(len(self.v)):
-         #   vTot[p] = np.sqrt(self.v[p][0]**2 + self.v[p][1]**2)
         vTot = np.sqrt(self.v[:,0]**2 + self.v[:,1]**2)
-        #print(self.m.shape)
-        #print(self.v)
-        #print(vTot)
-        #print(vTot.shape)
         KE = np.sum(self.m*vTot**2)
         #Would be nice to take psi & rho as inputs to avoid calculating them redundantly
         psi = self.psi
@@ -178,8 +186,6 @@ class NBody_solver:
             file_save = (x_file, E_file, NParticles): the filenames to which we want to save 
             the position and energy data. NParticles is the number of particles to track
         """
-        
-        
         #Get the forces from the current particle distribution (psi is defined during this operation)
         self.get_Forces()
         #Get the total energy for the current particle distribution (needs psi)
