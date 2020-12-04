@@ -2,26 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import matplotlib.cm as cm
 
-"""
-def pot2d_handleInf(x,y, lamb=1, soft = 0.1):
-    #eps = 8.85*10**(-12)
-    eps = 1
-    V = np.zeros([len(x),len(y)])
-    
-    r = R(x,y)
-    mask_r = r < soft #avoid blowup at log(0)
-    for i in range(len(x)):
-        for j in range(len(y)):
-            if mask_r[i,j]==False:
-                V[i,j] = np.log(r[i,j])*lamb/(2*np.pi*eps)
-            else:
-                V[i,j] = np.log(r[i,j]+soft)*lamb/(2*np.pi*eps)
-    #V[mask_r == True] = np.log(r+soft)*lamb/(2*np.pi*eps)
-    #V[mask_r == False] = np.log(r)*lamb/(2*np.pi*eps)
-    
-    return V
-"""
-
 def R(x,y):
     return np.sqrt(x**2 + y**2)
 #Calculate potential but don't handle the singularity at r=0
@@ -39,29 +19,25 @@ def greenFunc(x, y, soft = 0.1):
 
     g = 1/(4*np.pi*r)
     return g
-"""
-def convolve(f, g, p=10):
-    #Take the convolution of f and g
-    F = np.fft.fft(np.pad(f, [0, p]))
-    G = np.fft.fft(np.pad(g, [0, p])) 
-    conv = np.fft.ifft(F * G)
-    if p > 0:
-        conv= conv[:-p,:-p]
-    conv = conv.real
-    return conv
-"""
-def conv_basic(f, g):
+
+def conv_basic(f, g, roll=False):
     F = np.fft.fft(f)
     G = np.fft.fft(g)
-    return np.fft.ifft(F*G)/len(f)
+    ans = np.fft.ifft(F*G)/len(f)
+    if roll==True:
+        l2 = int(len(f)/4)
+        ans = np.roll(ans, -l2, axis=1)
+    return ans
 
-def conv_padded(f, g):
+def conv_padded(f, g, roll=False):
     #Add padding
     padLen = len(f)
     f = np.pad(f,[0,padLen],mode='constant')
     g = np.pad(g,[0,padLen],mode='constant')
     #Take convolution of padded arrays, then remove padding and take real part
-    conv = conv_basic(f,g)[:-padLen,:-padLen].real
+    h = int(padLen/1)
+    conv = conv_basic(f,g,roll).real
+    conv = conv[:-h,:-h]
     return conv
 
 N = 64
@@ -96,7 +72,7 @@ Output:
     V[5,0] =  -1.0218657103125848
 """
 
-plot1 = False
+plot1 = True
 if plot1==True:
     plt.figure()
     plt.title('Point Charge Potential')
@@ -111,7 +87,7 @@ def Ax(g, rho, mask):
     g_rho_copy = g_rho_copy*mask
     return g_rho_copy
 
-#Set Dirichlet BC on the potential
+#Set Dirichlet BC for the potential on the box
 V = np.zeros([N,N])
 boxL = 10
 V[originInd-boxL:originInd+boxL,originInd-boxL:originInd+boxL] = 1.0
@@ -157,7 +133,7 @@ Output:
     
 See A7Q2b_rhoField_plot.png and A7Q2b_rhoAlongSide_plot.png for the output plots from Part B)
 """
-plot2 = False
+plot2 = True
 if plot2==True:
     plt.figure()
     plt.title('Charge Density, Conjugate Gradient')
@@ -170,14 +146,36 @@ if plot2==True:
     plt.plot(yp[originInd-boxL:originInd+boxL], rho[originInd-boxL:originInd+boxL, originInd-boxL])
     plt.show()
 
-#C)
-#I dont think this is how I'm supposed to get V from rho but i'm not sure how
-V_conjGrad = conv_padded(green,rho)
+#C
+V_conjGrad = conv_padded(green, rho, roll=True)
 
+"""
+See A7Q2c_Vfield_outsideBox_plot.png, A7Q2c_Vfield_insideBox_plot.png, A7Q2c_Vfield_xdir_plot.png, and 
+A7Q2c_Vfield_ydir_plot.png for the output plots from Part C).
+The potential is roughly constant horizontally (x-direction) inside the box, but there is significant
+dropoff vertically (y-direction) away from the centre of the box.
+
+The potential just outside the box goes to zero immediately in the y-direction, whereas in the x-direction
+it falls off more gradually (though still displaying a significant downturn at the edge of the box in the xdir_plot.png image).
+In both cases however, the field is perpendicular to the equipotential box wall
+as expected for our boundary conditions.
+    
+"""
 plot3 = True
 if plot3==True:
+    boxL = boxL*2
     plt.figure()
-    plt.title('Potential, Conjugate Gradient')
-    plt.pcolormesh(green, cmap = cm.plasma)
+    plt.title('Potential inside box, Conjugate Gradient')
+    plt.pcolormesh(V_conjGrad[originInd-boxL:originInd+boxL, originInd-boxL:originInd+boxL], cmap = cm.plasma)
     plt.colorbar()
+    plt.show()
+    
+    plt.figure()
+    plt.title('Potential near box in y-direction, Conjugate Gradient')
+    plt.plot(yp[originInd-boxL:originInd+boxL], V_conjGrad[originInd-boxL:originInd+boxL, originInd])
+    plt.show()
+
+    plt.figure()
+    plt.title('Potential near box in x-direction, Conjugate Gradient')
+    plt.plot(yp[originInd-boxL:originInd+boxL], V_conjGrad[originInd, originInd-boxL:originInd+boxL])
     plt.show()
