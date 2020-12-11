@@ -16,6 +16,9 @@ import NBody_sim as nbod
 
 import time
 
+#Switch to save the output plots
+savePlots=True
+
 """
 Performance (1 Time Step):
 N = 10^4
@@ -38,8 +41,8 @@ Scipy fft in NBody_systemInitialize (timed initialization):
     Size 128, scipy: 0.5464169979095459
     Size 512, numpy: 0.6636438369750977
     Size 512, scipy: 0.5789480209350586
-    inconclusive, will not make this change
-    Also only applies with cmass=True
+    Inconclusive, so I will not make this change
+    Also only applies with cmass=True anyways
 """
 
 #Number of ptcls
@@ -51,7 +54,7 @@ size = (LY, LX)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 200
+T = 10
 nsteps = int(T/h)
 
 #Initialize particle position, velocity, and mass
@@ -117,12 +120,21 @@ def animate(i):
         #plt.pause(0.1)
 #Initialize the figure
 fig = plt.figure()
-plt.pcolormesh(sim.rho, cmap = cm.plasma)
+plt.pcolormesh(rho_store[0,:,:], cmap = cm.plasma)
 plt.colorbar()
 
+if savePlots:
+    for t in range(nsteps):
+        plt.title('Density Field at t = '+ str((t+1)*h))
+        plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
+        filename = 'Frames/Q1_frame'+str(t+1)+'.png'
+        plt.savefig(filename)
+
+"""
 #Run the simulation and generate the animation from it
 anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
 plt.show()
 #anim.save('Part3_periodic.gif', writer='imagemagick')
 
 #anim.save('Test.gif', writer='imagemagick')
+"""

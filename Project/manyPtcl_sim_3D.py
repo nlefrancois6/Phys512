@@ -14,6 +14,9 @@ from mpl_toolkits import mplot3d
 import NBody_systemInitialize3D as syst
 import NBody_sim3D as nbod
 
+#Switch to save the output plots
+savePlots=True
+
 #Number of ptcls
 N = 10**4
 #Grid dimensions (must be square for now)
@@ -24,7 +27,7 @@ size = (LY, LX, LZ)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 1000
+T = 500
 nsteps = int(T/h)
 
 soften = 0.1
@@ -81,9 +84,10 @@ if showEnergyPlot == True:
     plt.title('System Total Energy')
     plt.xlabel('Time')
     plt.ylabel('Total Energy')
+    if savePlots:
+        plt.savefig('Energy/Q3_3D_energy.png')
 
-
-
+"""
 #yp, xp, zp = np.linspace(0, LY-1, LY), np.linspace(0, LX-1, LX), np.linspace(0, LZ-1, LZ)
 #fig = plt.figure(figsize = (10, 7))
 ax = plt.axes(projection ="3d")
@@ -94,6 +98,16 @@ ax.scatter3D(xs_store[:,i], ys_store[:,i], zs_store[:,i], color = "green", marke
 plt.title("Density Field at t = "+ str(i*h))
 # show plot
 plt.show()
+"""
+
+if savePlots:
+    for t in range(nsteps):
+        ax = plt.axes(projection ="3d")
+        plt.title("Density Field at t = "+ str(t*h))
+        ax.scatter3D(xs_store[:,t], ys_store[:,t], zs_store[:,t], color = "green", marker='o', s=1)
+        filename = 'Frames/Q3_3D_frame'+str(t+1)+'.png'
+        plt.savefig(filename)
+
 
 """
 #Define the function used to update the animation at each frame
