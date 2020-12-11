@@ -23,8 +23,11 @@ size = (LY, LX)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 300
+T = 500
 nsteps = int(T/h)
+
+soften = 1.5
+BC = 'Periodic'
 
 #Initialize particle position, velocity, and mass
 x0 = np.array([[LY/2, LX/2 - 10],[LY/2, LX/2 + 10]]) #Note first value is x_y, second is x_x
@@ -33,17 +36,23 @@ m0 = [10 for t in range(N)]
 #cmass = False
 
 #Initialize the system of N particles
-system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft=0.1, boundaryCondition = 'Non-Periodic',)
+system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft=soften, boundaryCondition = BC)
 #Initialize the simulation for our system of N particles
-sim = nbod.NBody_solver(size,system,h, soft=0.1)
+sim = nbod.NBody_solver(size,system,h, soft=soften, boundaryCondition = BC)
 
 #Run the simulation
 
 #We'll want to store the density field, energy, and frame from each time-step
-rho_store = np.zeros((nsteps+1, LY, LX))
+if BC == 'Non-Periodic':
+    LY2 = 2*LY; LX2 = 2*LX
+    rho_store = np.zeros((nsteps+1, LY2, LX2))
+else:
+    rho_store = np.zeros((nsteps+1, LY, LX))
+    
 E_store = np.zeros(nsteps)
 
 rho_store[0,:,:] = sim.rho
+
 
 """
 Method 2 (seems to be the better option):

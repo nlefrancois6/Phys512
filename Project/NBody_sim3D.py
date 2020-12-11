@@ -26,7 +26,7 @@ class NBody_solver:
         #For non-periodic conditions, the grid is padded to double the actual size 
         #with empty space to avoid wrap-around effects.
         if self.BC == 'Non-Periodic':
-            self.size = (2*size[0],2*size[1])   
+            self.size = (2*size[0],2*size[1],2*size[2])   
         else:
             self.size = size
         self.cosmology_mass = cosmology_mass
@@ -36,10 +36,8 @@ class NBody_solver:
         self.x = particles.x
         self.v = particles.v
         self.m = particles.m
-        x, y = np.arange(self.size[0],dtype=float), np.arange(self.size[0],dtype=float)
-        self.x_list = x
-        self.y_list = y
-        self.mesh = np.array(np.meshgrid(x,y))
+        x, y, z = np.linspace(0, self.size[0]-1, self.size[0]), np.linspace(0, self.size[1]-1, self.size[1]), np.linspace(0, self.size[2]-1, self.size[2])
+        self.mesh = np.array(np.meshgrid(x,y,z))
         self.get_NGPdensity()
         self.get_greensFunc()
     
@@ -48,14 +46,14 @@ class NBody_solver:
         Get the density function rho on the grid using the Nearest Grid Points method, which approximates
         the density by lumping each particle's mass into the nearest grid point.
         """
-        
-        #Get nearest gridpoint index
+       #Get nearest gridpoint index
         self.x_ind = np.rint(self.x).astype('int') % self.size[0]
+        #print(self.x_ind)
         #Store the grid of particle indices to access later
-        self.x_indexList = tuple(self.x_ind[:, i] for i in range(2))
+        self.x_indexList = tuple(self.x_ind[:, i] for i in range(3))
         #Add up the contributions of all particles to get the total density at each grid point
         x_gridpoints = np.linspace(0, self.size[0]-1, self.size[0]+1)
-        bin_coords = np.repeat([x_gridpoints], 2, axis=0)
+        bin_coords = np.repeat([x_gridpoints], 3, axis=0)
         #Bin info inputs for fast_histogram. Not sure if x,y are in the right order but it shouldn't matter for a square grid
         #x_min = min(bin_coords[0]); x_max = max(bin_coords[0])+0.1
         #y_min = min(bin_coords[1]); y_max = max(bin_coords[1])+0.1
@@ -67,12 +65,9 @@ class NBody_solver:
         #GP_densities = histogram2d(self.x_ind[:,0], self.x_ind[:,1], self.size, hist_range, weights = self.m.flatten())
         #self.rho = GP_densities
         
-        
     def get_greensFunc(self):
         """
         Get the Green's function of the particles on the grid
-        Note: this will only work for square grids as there was not enough time 
-        to implement this with rectangular grids. 
         """
         r = np.sum(self.mesh**2,axis=0)
         r[r<self.soft**2] = self.soft**2
@@ -80,11 +75,12 @@ class NBody_solver:
         r = np.sqrt(r)
         
         g = 1/(4*np.pi*r)
-        
+        """
         if self.BC == 'Periodic':
             #Handle the corner periodic behaviour
-            h_x,h_y = self.size[0]//2, self.size[1]//2
+            h_x,h_y,h_z = self.size[0]//2, self.size[1]//2, self.size[2]//2
 
+            #Not sure how to generalize this to 3D
             try:
                 g[h_x:, :h_y] = np.flip(g[:h_x,:h_y],axis=0)
                 g[:,h_y:] = np.flip(g[:,:h_y],axis=1)
@@ -95,7 +91,8 @@ class NBody_solver:
         if self.BC == 'Periodic':
             g = np.flip(g,0)
             g = np.flip(g,1)
-        """   
+            g = np.flip(g,2)
+        
         self.green = g
         
     def get_Potential(self):
@@ -119,17 +116,32 @@ class NBody_solver:
         psi = irfftn(psi_FFT)
         
         #Shift psi back to the centre of the real domain
-        for i in range(2):
+        for i in range(3):
             psi = 0.5*(np.roll(psi,1,axis=i)+psi)
         
         #If the boundary conditions is not periodic, set the potential to 0
         #For non-periodic boundary conditions, use Dirichlet BC with Psi|_boundary = 0
         if self.BC == 'Non-Periodic':
-            psi[0:,0] = 0
-            psi[0,-1] = 0
-            psi[-1:,-1] = 0
-            psi[-1:,0] = 0 
-
+            psi[0:,0,0] = 0
+            psi[0:,-1,0] = 0
+            psi[-1:,-1,0] = 0
+            psi[-1:,0,0] = 0 
+            
+            psi[0:,0,-1] = 0
+            psi[0,-1,-1] = 0
+            psi[-1:,-1,-1] = 0
+            psi[-1:,0,-1] = 0
+            
+            psi[0,0,0:] = 0
+            psi[0,-1,0:] = 0
+            psi[-1,-1,0:] = 0
+            psi[-1,0,0:] = 0
+            
+            psi[0,0,-1:] = 0
+            psi[0,-1,-1:] = 0
+            psi[-1,-1,-1:] = 0
+            psi[-1,0,-1:] = 0
+            
         self.psi = psi
     
     def get_Forces(self):
@@ -138,8 +150,9 @@ class NBody_solver:
         Evaluate the gradient using central differencing (could use a higher-order method if time)
         We then apply the force at each grid point to each particle lumped onto that grid point by the NGP method
         """
-    
-        F_gp = np.zeros([2,self.size[0],self.size[1]])
+        
+        
+        F_gp = np.zeros([3,self.size[0],self.size[1],self.size[2]])
         self.get_Potential()
         #Central differencing to get force field on the grid points 
         #Could replace this with a higher order scheme
@@ -147,6 +160,7 @@ class NBody_solver:
         
         F_gp[0] = 0.5*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
         F_gp[1] = 0.5*(np.roll(self.psi,1,axis=1)-np.roll(self.psi,-1,axis=1))
+        F_gp[2] = 0.5*(np.roll(self.psi,1,axis=2)-np.roll(self.psi,-1,axis=2))
         """
         if self.BC == 'Periodic':
             F_gp[0] = 0.5*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
@@ -164,7 +178,7 @@ class NBody_solver:
         """
         F_gp = -self.G*self.rho*F_gp
         #Apply the force to each particle
-        F_ptcls = np.moveaxis(F_gp,0,-1)
+        F_ptcls = np.moveaxis(F_gp,[0,1,2],[-1,-2,-3])
         F = F_ptcls[self.x_indexList]
         self.F = F
     
@@ -172,7 +186,7 @@ class NBody_solver:
         """
         Track the total energy of the system as the sum of the kinetic and potential energies
         """
-        vTot = np.sqrt(self.v[:,0]**2 + self.v[:,1]**2)
+        vTot = np.sqrt(self.v[:,0]**2 + self.v[:,1]**2 + self.v[:,2]**2)
         KE = np.sum(self.m*(vTot**2))
         #Would be nice to take psi & rho as inputs to avoid calculating them redundantly
         psi = self.psi
@@ -189,9 +203,11 @@ class NBody_solver:
         if self.cosmology_mass:
             self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m[:,0]
             self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m[:,0]
+            self.v[:,2] = self.v[:,2]+self.F[:,2]*self.dt/self.m[:,0]
         else:
             self.v[:,0] = self.v[:,0]+self.F[:,0]*self.dt/self.m
             self.v[:,1] = self.v[:,1]+self.F[:,1]*self.dt/self.m
+            self.v[:,2] = self.v[:,2]+self.F[:,2]*self.dt/self.m
         #position update steps
         self.x = self.x+self.v*self.dt
         self.x = self.x%self.size[0]
@@ -211,7 +227,7 @@ class NBody_solver:
         self.get_Forces()
         #Get the total energy for the current particle distribution (needs psi)
         self.get_totalEnergy()
-        energyTot = self.E
+        #energyTot = self.E
         #Move the particles according to the force field to get the new particle distribution
         #This method will update the positions and velocities of the particles
         self.time_stepping_leapfrog()

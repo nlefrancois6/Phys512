@@ -9,7 +9,7 @@ import random as rn
 import numpy as np
 
 class ptcl:
-    def __init__(self, m, x, y, vx=0, vy=0):
+    def __init__(self, m, x, y, z, vx=0, vy=0, vz=0):
         """
         Initialize a particle which has mass, position, momentum
         """
@@ -30,9 +30,9 @@ class Nparticle_system:
         
         #Initialize x, v, m and assign these ICs to a list of particles
         self.get_x0(set_x0)
-        self.get_v0(1, set_v0)
+        self.get_v0(1, set_v0) #could make the speedLimit a setable variable
         self.get_m0(set_m0, soft)
-        self.particles = np.asarray([ptcl(m,x[0],x[1],vx=v[0],vy=v[1]) for m,x,v in zip(self.m,self.x,self.v)])
+        self.particles = np.asarray([ptcl(m,x[0],x[1],x[2],vx=v[0],vy=v[1],vz=v[2]) for m,x,v in zip(self.m,self.x,self.v)])
     
     
     def get_x0(self, set_x0 = None):
@@ -48,10 +48,10 @@ class Nparticle_system:
                 #If the user has set some (or all) of the initial positions, get those and store them
                 numICs_set = len(set_x0)
                 for i in range(numICs_set):
-                    IC.append((set_x0[i][0], set_x0[i][1]))
+                    IC.append((set_x0[i][0], set_x0[i][1], set_x0[i][2]))
             #Generate and store the remaining un-set initial positions
             for j in range(self.N - numICs_set):
-                IC.append((rn.random()*(self.size[0]-1), rn.random()*(self.size[1]-1)))
+                IC.append((rn.random()*(self.size[0]-1), rn.random()*(self.size[1]-1), rn.random()*(self.size[2]-1)))
         elif self.BC == 'Non-Periodic':
             xmin,xmax = 1,self.size[0]-1
             IC = []
@@ -60,12 +60,12 @@ class Nparticle_system:
             else: 
                 numICs_set = len(set_x0)
                 for i in range(numICs_set):
-                    if set_x0[i][0].max()>xmax or set_x0[i][1].max()>xmax or set_x0[i][0].min()<xmin or set_x0[i][1]<xmin: 
+                    if set_x0[i][0].max()>xmax or set_x0[i][1].max()>xmax or set_x0[i][2].max()>xmax or set_x0[i][0].min()<xmin or set_x0[i][1]<xmin or set_x0[i][2]<xmin: 
                         raise ValueError(f'The position of the Particle must be within the boundary of 1 to {self.size[0]-1}')
                         
-                    IC.append((set_x0[i][0], set_x0[i][1]))
+                    IC.append((set_x0[i][0], set_x0[i][1], set_x0[i][2]))
             for j in range(self.N - numICs_set):
-                IC.append((rn.uniform(1.0001,self.size[0]-1.0001), rn.uniform(1.0001,self.size[1]-1.0001)))
+                IC.append((rn.uniform(1.0001,self.size[0]-1.0001), rn.uniform(1.0001,self.size[1]-1.0001), rn.uniform(1.0001,self.size[2]-1.0001)))
             
         self.x = np.asarray(IC)
     
@@ -91,11 +91,11 @@ class Nparticle_system:
             #If the user has set some (or all) of the initial positions, get those and store them
             numICs_set = len(set_v0)
             for i in range(numICs_set):
-                IC.append((set_v0[i][0], set_v0[i][1]))
+                IC.append((set_v0[i][0], set_v0[i][1], set_v0[i][2]))
         #Generate and store the remaining un-set initial positions
         #Currently using uniform dist, could change to gaussian or something else
         for j in range(self.N - numICs_set):
-            IC.append((rn.random()*2*speedLimit-speedLimit, rn.random()*2*speedLimit-speedLimit))
+            IC.append((rn.random()*2*speedLimit-speedLimit, rn.random()*2*speedLimit-speedLimit, rn.random()*2*speedLimit-speedLimit))
         
         self.v = np.asarray(IC)
                 
@@ -112,7 +112,8 @@ class Nparticle_system:
             #Find the power spectrum
             k_x = np.real(np.fft.fft(self.x[:,0]))
             k_y = np.real(np.fft.fft(self.x[:,1]))
-            k = np.sqrt(k_x**2 + k_y**2)
+            k_z = np.real(np.fft.fft(self.x[:,2]))
+            k = np.sqrt(k_x**2 + k_y**2 + k_z**2)
             #Apply softener to avoid blowup
             k[k<soft] = soft
             #Find effective mass
