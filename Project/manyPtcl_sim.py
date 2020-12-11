@@ -13,6 +13,9 @@ import matplotlib.cm as cm
 import NBody_systemInitialize as syst
 import NBody_sim as nbod
 
+#Switch to save the output plots
+savePlots=True
+
 #Number of ptcls
 N = 10**4
 #Grid dimensions (must be square for now)
@@ -76,6 +79,8 @@ if showEnergyPlot == True:
     plt.title('System Total Energy')
     plt.xlabel('Time')
     plt.ylabel('Total Energy')
+    if savePlots:
+        plt.savefig('Energy/Q3_energy.png')
     
 #Define the function used to update the animation at each frame
 def animate(i):
@@ -88,12 +93,21 @@ def animate(i):
         #plt.pause(0.1)
 #Initialize the figure
 fig = plt.figure()
-plt.pcolormesh(sim.rho, cmap = cm.plasma)
+plt.pcolormesh(rho_store[0,:,:], cmap = cm.plasma)
 plt.colorbar()
 
+if savePlots:
+    for t in range(nsteps):
+        plt.title('Density Field at t = '+ str((t+1)*h))
+        plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
+        filename = 'Frames/Q3_frame'+str(t+1)+'.png'
+        plt.savefig(filename)
+
+"""
 #Run the simulation and generate the animation from it
 anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
 plt.show()
 #anim.save('Part3_periodic.gif', writer='imagemagick')
 
 #anim.save('Test.gif', writer='imagemagick')
+"""

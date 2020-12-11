@@ -13,6 +13,8 @@ import matplotlib.cm as cm
 import NBody_systemInitialize as syst
 import NBody_sim as nbod
 
+#Switch to save the output plots
+savePlots=True
 
 #Number of ptcls
 N = 2
@@ -23,7 +25,7 @@ size = (LY, LX)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 500
+T = 50
 nsteps = int(T/h)
 
 soften = 1.5
@@ -65,7 +67,7 @@ for t in range(nsteps):
     E, x = sim.advance_timeStep()
     rho_store[t+1,:,:] = sim.rho
     E_store[t] = sim.E
-    
+
 showEnergyPlot = True
 if showEnergyPlot == True:
     plt.figure()
@@ -73,6 +75,8 @@ if showEnergyPlot == True:
     plt.title('System Total Energy')
     plt.xlabel('Time Step')
     plt.ylabel('Total Energy')
+    if savePlots:
+        plt.savefig('Energy/Q2_energy.png')
     
 #Define the function used to update the animation at each frame
 def animate(i):
@@ -83,10 +87,22 @@ def animate(i):
     #plt.pause(0.01)
 #Initialize the figure
 fig = plt.figure()
-plt.pcolormesh(sim.rho, cmap = cm.plasma)
+plt.pcolormesh(rho_store[0,:,:], cmap = cm.plasma)
 plt.colorbar()
 
+if savePlots:
+    for t in range(nsteps):
+        plt.title('Density Field at t = '+ str((t+1)*h))
+        plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
+        filename = 'Frames/Q2_frame'+str(t+1)+'.png'
+        plt.savefig(filename)
+
+"""
 #Run the simulation and generate the animation from it
-anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
+Frames = np.linspace(0,nsteps,nsteps+1)
+nFrames = nsteps+1
+anim = animation.FuncAnimation(fig, animate, frames = nFrames, interval = 10, blit = False)
+write = animation.PillowWriter(fps=50) 
+anim.save('Part2.gif', writer=write)
 plt.show()
-#anim.save('Part2.gif', writer='imagemagick')
+"""
