@@ -66,7 +66,7 @@ class Nparticle_system:
                     IC.append((set_x0[i][0], set_x0[i][1]))
             for j in range(self.N - numICs_set):
                 IC.append((rn.uniform(1.0001,self.size[0]-1.0001), rn.uniform(1.0001,self.size[1]-1.0001)))
-            
+
         self.x = np.asarray(IC)
     
     def get_v0(self, speedLimit, set_v0 = None):

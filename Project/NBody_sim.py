@@ -8,9 +8,10 @@ Created on Fri Nov  6 11:57:02 2020
 import numpy as np
 from fast_histogram import histogram2d
 from scipy.fft import rfftn, irfftn
+import matplotlib.pyplot as plt
 
 class NBody_solver:
-    def __init__(self,size,particles,dt,soft=0.1,G=1,boundaryCondition='Periodic', cosmology_mass=False):
+    def __init__(self,size,particles,dt,soft=0.1,G=10,boundaryCondition='Periodic', cosmology_mass=False):
         """
         The NBody class that specifies the simulation. 
         Input(s):
@@ -91,6 +92,17 @@ class NBody_solver:
             except: 
                 g[h_x:, :h_y+1] = np.flip(g[:h_x+1,:h_y+1],axis=0)
                 g[:,h_y:] = np.flip(g[:,:h_y+1],axis=1)
+                
+        if self.BC == 'Non-Periodic':
+            #Handle the corner periodic behaviour
+            h_x,h_y = self.size[0]//2, self.size[1]//2
+
+            try:
+                g[h_x:, :h_y] = np.flip(g[:h_x,:h_y],axis=0)
+                g[:,h_y:] = np.flip(g[:,:h_y],axis=1)
+            except: 
+                g[h_x:, :h_y+1] = np.flip(g[:h_x+1,:h_y+1],axis=0)
+                g[:,h_y:] = np.flip(g[:,:h_y+1],axis=1)
         """
         if self.BC == 'Periodic':
             g = np.flip(g,0)
@@ -111,7 +123,16 @@ class NBody_solver:
         psi = np.fft.irfftn(psi_FFT)
         
         """
-        #Seems to give identical results to np.fft
+        """
+        plt.figure()
+        plt.pcolormesh(self.rho)
+        plt.title('Rho')
+        
+        plt.figure()
+        plt.pcolormesh(self.green)
+        plt.title('Green')
+        """
+        #Might need to trim the padding
         rho_FFT = rfftn(self.rho)
         green_FFT = rfftn(self.green)
         
@@ -125,10 +146,17 @@ class NBody_solver:
         #If the boundary conditions is not periodic, set the potential to 0
         #For non-periodic boundary conditions, use Dirichlet BC with Psi|_boundary = 0
         if self.BC == 'Non-Periodic':
-            psi[0:,0] = 0
-            psi[0,-1] = 0
-            psi[-1:,-1] = 0
-            psi[-1:,0] = 0 
+            realSize = int(self.size[0]/2)
+            psi[:,0] = 0
+            psi[:,realSize:] = 0
+            psi[0,:] = 0
+            psi[realSize:,:] = 0 
+            """
+            psi[:,0] = 0
+            psi[:,-1] = 0
+            psi[0,:] = 0
+            psi[-1,:] = 0 
+            """
 
         self.psi = psi
     

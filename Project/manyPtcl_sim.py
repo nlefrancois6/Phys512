@@ -23,9 +23,9 @@ LX = 512
 LY = 512
 size = (LY, LX)
 #Time step size
-h = 10**1
+h = 10**2
 #Final time and number of time steps
-T = 3000
+T = 10000
 nsteps = int(T/h)
 
 soften = 0.8
@@ -49,30 +49,45 @@ sim = nbod.NBody_solver(size,system,h, soft = soften, cosmology_mass=cmass, boun
 #Run the simulation
 
 #We'll want to store the density field, energy, and frame from each time-step
+"""
 if BC == 'Non-Periodic':
     LY2 = 2*LY; LX2 = 2*LX
     rho_store = np.zeros((nsteps+1, LY2, LX2))
 else:
     rho_store = np.zeros((nsteps+1, LY, LX))
+"""
+rho_store = np.zeros((nsteps+1, LY, LX))
     
 E_store = np.zeros(nsteps)
 
-rho_store[0,:,:] = sim.rho
+if BC == 'Periodic':
+    rho_store[0,:,:] = sim.rho
+if BC == 'Non-Periodic':
+    rho_store[0,:,:] = sim.rho[:LY,:LX]
+    
 
-
-"""
-Method 2 (seems to be the better option):
-Makes an animation AFTER the simulation runs & replays it infinitely
-Should theoretically be easy to save anim after but it's giving a 'list index out of range' error
-"""
 
 #Use advance_timeStep() nsteps-many times
 for t in range(nsteps):
     #Store density field and energy
     E, x = sim.advance_timeStep()
-    rho_store[t+1,:,:] = sim.rho
+    if BC == 'Periodic':
+        rho_store[t+1,:,:] = sim.rho
+        #plt.figure()
+        #plt.pcolormesh(sim.psi)
+        #plt.title('Psi')
+    if BC == 'Non-Periodic':
+        rho_store[t+1,:,:] = sim.rho[:LY,:LX]
+        #plt.figure()
+        #plt.pcolormesh(sim.psi)
+        #plt.title('Psi')
+    #rho_store[t+1,:,:] = sim.rho
     E_store[t] = sim.E
-    
+
+
+
+
+#Plot the energy and save the density frames
 showEnergyPlot = True
 if showEnergyPlot == True:
     plt.figure()
@@ -81,7 +96,7 @@ if showEnergyPlot == True:
     plt.xlabel('Time')
     plt.ylabel('Total Energy')
     if savePlots:
-        plt.savefig('Energy/Q3_energy.png')
+        plt.savefig('Energy/Q3_energy_P_soft0p8_longT.png')
     
 #Define the function used to update the animation at each frame
 def animate(i):
@@ -96,15 +111,15 @@ def animate(i):
 fig = plt.figure()
 plt.pcolormesh(rho_store[0,:,:], cmap = cm.plasma)
 plt.colorbar()
-
+"""
 if savePlots:
     for t in range(nsteps):
         print('Saved t = ',t+1)
         plt.title('Density Field at t = '+ str((t+1)*h))
         plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
-        filename = 'Frames/Q3_frame'+str(t+1)+'.png'
+        filename = 'Frames/Q3_NP_frame'+str(t+1)+'.png'
         plt.savefig(filename)
-
+"""
 """
 #Run the simulation and generate the animation from it
 anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
