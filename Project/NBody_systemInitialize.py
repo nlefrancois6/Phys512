@@ -30,7 +30,7 @@ class Nparticle_system:
         
         #Initialize x, v, m and assign these ICs to a list of particles
         self.get_x0(set_x0)
-        self.get_v0(1, set_v0)
+        self.get_v0(0, set_v0)
         self.get_m0(set_m0, soft)
         self.particles = np.asarray([ptcl(m,x[0],x[1],vx=v[0],vy=v[1]) for m,x,v in zip(self.m,self.x,self.v)])
     

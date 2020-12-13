@@ -17,7 +17,7 @@ import NBody_sim as nbod
 savePlots=True
 
 #Number of ptcls
-N = 10**4
+N = 10**5
 #Grid dimensions (must be square for now)
 LX = 512
 LY = 512
@@ -25,10 +25,10 @@ size = (LY, LX)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 500
+T = 3000
 nsteps = int(T/h)
 
-soften = 1.5
+soften = 0.8
 BC = 'Periodic'
 
 #Initialize particle position, velocity, and mass
@@ -40,6 +40,7 @@ cmass = False
 
 #Initialize the system of N particles
 system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, boundaryCondition = BC, soft=soften, cosmology_mass=cmass)
+
 
 #Initialize the simulation for our system of N particles
 #may just need to not use boundaryCondition here if I can't figure out how to fix it :/
@@ -98,6 +99,7 @@ plt.colorbar()
 
 if savePlots:
     for t in range(nsteps):
+        print('Saved t = ',t+1)
         plt.title('Density Field at t = '+ str((t+1)*h))
         plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
         filename = 'Frames/Q3_frame'+str(t+1)+'.png'
