@@ -27,10 +27,10 @@ size = (LY, LX, LZ)
 #Time step size
 h = 10**1
 #Final time and number of time steps
-T = 500
+T = 10000
 nsteps = int(T/h)
 
-soften = 0.1
+soften = 0.8
 BC = 'Periodic'
 
 #Initialize particle position, velocity, and mass
@@ -85,7 +85,7 @@ if showEnergyPlot == True:
     plt.xlabel('Time')
     plt.ylabel('Total Energy')
     if savePlots:
-        plt.savefig('Energy/Q3_3D_energy.png')
+        plt.savefig('Energy/Q3_3D_P_energy.png')
 
 """
 #yp, xp, zp = np.linspace(0, LY-1, LY), np.linspace(0, LX-1, LX), np.linspace(0, LZ-1, LZ)
@@ -105,7 +105,7 @@ if savePlots:
         ax = plt.axes(projection ="3d")
         plt.title("Density Field at t = "+ str(t*h))
         ax.scatter3D(xs_store[:,t], ys_store[:,t], zs_store[:,t], color = "green", marker='o', s=1)
-        filename = 'Frames/Q3_3D_frame'+str(t+1)+'.png'
+        filename = 'Frames/Q3_3D_P_frame'+str(t+1)+'.png'
         plt.savefig(filename)
 
 

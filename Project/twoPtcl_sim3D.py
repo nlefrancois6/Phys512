@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import matplotlib.cm as cm
+from mpl_toolkits import mplot3d
 
 import NBody_systemInitialize3D as syst
 import NBody_sim3D as nbod
@@ -33,8 +34,8 @@ soften = 0.8
 BC = 'Periodic'
 
 #Initialize particle position, velocity, and mass
-x0 = np.array([[LY/2, LX/2 - 10, 0],[LY/2, LX/2 + 10, 0]]) #Note first value is x_y, second is x_x
-v0 = np.array([[0.1,0, 0],[-0.1,0,0]]) #Ptcl initially at rest. Note first value is v_y, second is v_y
+x0 = np.array([[LY/2, LX/2 - 5, LZ/2],[LY/2, LX/2 + 5, LZ/2]]) #Note first value is x_y, second is x_x
+v0 = np.array([[0.5,0, 0],[-0.5,0,0]]) #Ptcl initially at rest. Note first value is v_y, second is v_y
 m0 = [100 for t in range(N)]
 #cmass = False
 
@@ -56,6 +57,8 @@ E_store = np.zeros(nsteps)
 
 rho_store[0,:,:,:] = sim.rho
 
+xs_store = np.zeros((N,nsteps+1)); ys_store = np.zeros((N,nsteps+1)); zs_store = np.zeros((N,nsteps+1))
+xs_store[:,0] = sim.x[:,0]; ys_store[:,0] = sim.x[:,1]; zs_store[:,0] = sim.x[:,2]
 
 """
 Method 2 (seems to be the better option):
@@ -68,6 +71,7 @@ for t in range(nsteps):
     E, x = sim.advance_timeStep()
     rho_store[t+1,:,:,:] = sim.rho
     E_store[t] = sim.E
+    xs_store[:,t+1] = sim.x[:,0]; ys_store[:,t+1] = sim.x[:,1]; zs_store[:,t+1] = sim.x[:,2]
     
 showEnergyPlot = True
 if showEnergyPlot == True:
@@ -86,16 +90,18 @@ def animate(i):
     #This is where new data is inserted into the plot.
     plt.pcolormesh(rho_store[i,:,:,0], cmap = cm.plasma)
     #plt.pause(0.01)
-    
+"""
 #Initialize the figure
 fig = plt.figure()
 plt.pcolormesh(rho_store[0,:,:,0], cmap = cm.plasma)
 plt.colorbar()
+"""
 
 if savePlots:
     for t in range(nsteps):
-        plt.title('Density Field at t = '+ str((t+1)*h))
-        plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
+        ax = plt.axes(projection ="3d")
+        plt.title("Density Field at t = "+ str(t*h))
+        ax.scatter3D(xs_store[:,t], ys_store[:,t], zs_store[:,t], color = "green", marker='o', s=10)
         filename = 'Frames/Q2_3D_frame'+str(t+1)+'.png'
         plt.savefig(filename)
 

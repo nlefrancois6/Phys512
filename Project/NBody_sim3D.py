@@ -10,7 +10,7 @@ from fast_histogram import histogram2d
 from scipy.fft import rfftn, irfftn
 
 class NBody_solver:
-    def __init__(self,size,particles,dt,soft=0.1,G=1,boundaryCondition='Periodic', cosmology_mass=False):
+    def __init__(self,size,particles,dt,soft=0.1,G=10,boundaryCondition='Periodic', cosmology_mass=False):
         """
         The NBody class that specifies the simulation. 
         Input(s):
