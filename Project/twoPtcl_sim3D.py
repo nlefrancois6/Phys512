@@ -37,7 +37,6 @@ BC = 'Periodic'
 x0 = np.array([[LY/2, LX/2 - 5, LZ/2],[LY/2, LX/2 + 5, LZ/2]]) #Note first value is x_y, second is x_x
 v0 = np.array([[0.5,0, 0],[-0.5,0,0]]) #Ptcl initially at rest. Note first value is v_y, second is v_y
 m0 = [100 for t in range(N)]
-#cmass = False
 
 #Initialize the system of N particles
 system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft=soften, boundaryCondition = BC)
@@ -60,11 +59,6 @@ rho_store[0,:,:,:] = sim.rho
 xs_store = np.zeros((N,nsteps+1)); ys_store = np.zeros((N,nsteps+1)); zs_store = np.zeros((N,nsteps+1))
 xs_store[:,0] = sim.x[:,0]; ys_store[:,0] = sim.x[:,1]; zs_store[:,0] = sim.x[:,2]
 
-"""
-Method 2 (seems to be the better option):
-Makes an animation AFTER the simulation runs & replays it infinitely
-Should theoretically be easy to save anim after but it's giving a 'list index out of range' error
-"""
 #Use advance_timeStep() nsteps-many times
 for t in range(nsteps):
     #Store density field and energy
@@ -83,20 +77,6 @@ if showEnergyPlot == True:
     if savePlots:
         plt.savefig('Energy/Q2_3D_energy.png')
     
-#Define the function used to update the animation at each frame
-def animate(i):
-    #Only update the plot for integer t
-    plt.title('Density Field at t = '+ str(i*h))
-    #This is where new data is inserted into the plot.
-    plt.pcolormesh(rho_store[i,:,:,0], cmap = cm.plasma)
-    #plt.pause(0.01)
-"""
-#Initialize the figure
-fig = plt.figure()
-plt.pcolormesh(rho_store[0,:,:,0], cmap = cm.plasma)
-plt.colorbar()
-"""
-
 if savePlots:
     for t in range(nsteps):
         ax = plt.axes(projection ="3d")
@@ -104,10 +84,3 @@ if savePlots:
         ax.scatter3D(xs_store[:,t], ys_store[:,t], zs_store[:,t], color = "green", marker='o', s=10)
         filename = 'Frames/Q2_3D_frame'+str(t+1)+'.png'
         plt.savefig(filename)
-
-"""
-#Run the simulation and generate the animation from it
-anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
-plt.show()
-#anim.save('Part2.gif', writer='imagemagick')
-"""

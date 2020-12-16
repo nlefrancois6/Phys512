@@ -35,7 +35,6 @@ BC = 'Periodic'
 x0 = np.array([[LY/2, LX/2 - 10],[LY/2, LX/2 + 10]]) #Note first value is x_y, second is x_x
 v0 = np.array([[0.1,0],[-0.1,0]]) #Ptcl initially at rest. Note first value is v_y, second is v_y
 m0 = [10 for t in range(N)]
-#cmass = False
 
 #Initialize the system of N particles
 system = syst.Nparticle_system(N, size, m0, set_x0 = x0, set_v0 = v0, soft=soften, boundaryCondition = BC)
@@ -56,11 +55,6 @@ E_store = np.zeros(nsteps)
 rho_store[0,:,:] = sim.rho
 
 
-"""
-Method 2 (seems to be the better option):
-Makes an animation AFTER the simulation runs & replays it infinitely
-Should theoretically be easy to save anim after but it's giving a 'list index out of range' error
-"""
 #Use advance_timeStep() nsteps-many times
 for t in range(nsteps):
     #Store density field and energy
@@ -68,6 +62,7 @@ for t in range(nsteps):
     rho_store[t+1,:,:] = sim.rho
     E_store[t] = sim.E
 
+#Plot the energy and save the video frames
 showEnergyPlot = True
 if showEnergyPlot == True:
     plt.figure()
@@ -78,13 +73,6 @@ if showEnergyPlot == True:
     if savePlots:
         plt.savefig('Energy/Q2_energy.png')
     
-#Define the function used to update the animation at each frame
-def animate(i):
-    #Only update the plot for integer t
-    plt.title('Density Field at t = '+ str(i*h))
-    #This is where new data is inserted into the plot.
-    plt.pcolormesh(rho_store[i,:,:], cmap = cm.plasma)
-    #plt.pause(0.01)
 #Initialize the figure
 fig = plt.figure()
 plt.pcolormesh(rho_store[0,:,:], cmap = cm.plasma)
@@ -96,13 +84,3 @@ if savePlots:
         plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
         filename = 'Frames/Q2_frame'+str(t+1)+'.png'
         plt.savefig(filename)
-
-"""
-#Run the simulation and generate the animation from it
-Frames = np.linspace(0,nsteps,nsteps+1)
-nFrames = nsteps+1
-anim = animation.FuncAnimation(fig, animate, frames = nFrames, interval = 10, blit = False)
-write = animation.PillowWriter(fps=50) 
-anim.save('Part2.gif', writer=write)
-plt.show()
-"""

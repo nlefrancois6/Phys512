@@ -18,7 +18,7 @@ class ptcl:
         self.v = (vx, vy)
 
 class Nparticle_system:
-    def __init__(self, N, size, set_m0, set_x0 = None, set_v0 = None, boundaryCondition = 'Periodic', soft = None, cosmology_mass = False):
+    def __init__(self, N, size, set_m0, set_x0 = None, set_v0 = None, v0_max = 1, boundaryCondition = 'Periodic', soft = None, cosmology_mass = False):
         """
         Initialize a system of N particles with grid dimensions specified by 'size' 
         Can specify initial values for mass, position and velocity
@@ -30,7 +30,7 @@ class Nparticle_system:
         
         #Initialize x, v, m and assign these ICs to a list of particles
         self.get_x0(set_x0)
-        self.get_v0(1, set_v0) #could make the speedLimit a setable variable
+        self.get_v0(v0_max, set_v0) 
         self.get_m0(set_m0, soft)
         self.particles = np.asarray([ptcl(m,x[0],x[1],x[2],vx=v[0],vy=v[1],vz=v[2]) for m,x,v in zip(self.m,self.x,self.v)])
     
@@ -53,7 +53,8 @@ class Nparticle_system:
             for j in range(self.N - numICs_set):
                 IC.append((rn.random()*(self.size[0]-1), rn.random()*(self.size[1]-1), rn.random()*(self.size[2]-1)))
         elif self.BC == 'Non-Periodic':
-            xmin,xmax = 1,self.size[0]-1
+            #specify the region that will be populated for non-periodic BCs
+            xmin,xmax = 3*self.size[0]//8-1,5*self.size[0]//8-1
             IC = []
             if set_x0 is None: 
                 numICs_set = 0
@@ -65,29 +66,21 @@ class Nparticle_system:
                         
                     IC.append((set_x0[i][0], set_x0[i][1], set_x0[i][2]))
             for j in range(self.N - numICs_set):
-                IC.append((rn.uniform(1.0001,self.size[0]-1.0001), rn.uniform(1.0001,self.size[1]-1.0001), rn.uniform(1.0001,self.size[2]-1.0001)))
-            
+                IC.append((rn.uniform(xmin,xmax), rn.uniform(xmin,xmax), rn.uniform(xmin,xmax)))
+                
         self.x = np.asarray(IC)
     
     def get_v0(self, speedLimit, set_v0 = None):
         """
         Get the initial values for velocity either set directly by the user or by random generation
+        If randomly generated, the velocity magnitude is bounded by the set value of speedLimit
         """     
         IC = []
         #print(set_v0)
         if set_v0 is None:
-            #print('none')
             #If no initial velocities set, we don't need to store any (all will be generated below)
             numICs_set = 0
-        #This triggers even when they aren't zeros; could try elif set_v0 == False maybe? might not be worth it
-        #elif set_v0.all() == 0:
-         #   print('zeros')
-            #Set all velocities to zero
-          #  for i in range(self.N):
-           #     numICs_set = 0
-            #    IC.append((0, 0))
         else:
-            #print('else')
             #If the user has set some (or all) of the initial positions, get those and store them
             numICs_set = len(set_v0)
             for i in range(numICs_set):
@@ -101,11 +94,11 @@ class Nparticle_system:
                 
     def get_m0(self, set_m0, soft = None):
         """
-        Get the initial values for mass either set directly by the user or for the cosmos == True case (explain what this means)
+        Get the initial values for mass either set directly by the user or using the power
+        spectrum distribution for Question 4
         """  
         if self.cosmology_mass == False:
             self.m = np.array(set_m0.copy()).T
-            #print(np.asarray(self.m).shape)
         else:
             #Relocate particles onto the nearest gridpoint
             self.x = np.rint(self.x).astype('int') % self.size[0]

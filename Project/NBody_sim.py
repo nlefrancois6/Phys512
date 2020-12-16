@@ -30,6 +30,7 @@ class NBody_solver:
             self.size = (2*size[0],2*size[1])   
         else:
             self.size = size
+        #self.cosmology_mass = cosmology_mass
         self.cosmology_mass = cosmology_mass
         self.soft = soft
         self.G = G
@@ -58,15 +59,17 @@ class NBody_solver:
         x_gridpoints = np.linspace(0, self.size[0]-1, self.size[0]+1)
         bin_coords = np.repeat([x_gridpoints], 2, axis=0)
         #Bin info inputs for fast_histogram. Not sure if x,y are in the right order but it shouldn't matter for a square grid
-        #x_min = min(bin_coords[0]); x_max = max(bin_coords[0])+0.1
-        #y_min = min(bin_coords[1]); y_max = max(bin_coords[1])+0.1
-        #hist_range = [(x_min, x_max), (y_min, y_max)]
+        x_min = min(bin_coords[0]); x_max = max(bin_coords[0])+0.1
+        y_min = min(bin_coords[1]); y_max = max(bin_coords[1])+0.1
+        hist_range = [(x_min, x_max), (y_min, y_max)]
         
-        GP_densities = np.histogramdd(self.x_ind, bins = bin_coords, weights = self.m.flatten())
-        self.rho = GP_densities[0]
+        #Numpy Histogram Method
+        #GP_densities = np.histogramdd(self.x_ind, bins = bin_coords, weights = self.m.flatten())
+        #self.rho = GP_densities[0]
         
-        #GP_densities = histogram2d(self.x_ind[:,0], self.x_ind[:,1], self.size, hist_range, weights = self.m.flatten())
-        #self.rho = GP_densities
+        #Fast Histogram method
+        GP_densities = histogram2d(self.x_ind[:,0], self.x_ind[:,1], self.size, hist_range, weights = self.m.flatten())
+        self.rho = GP_densities
         
         
     def get_greensFunc(self):
@@ -82,16 +85,20 @@ class NBody_solver:
         
         g = 1/(4*np.pi*r)
         
-        if self.BC == 'Periodic':
-            #Handle the corner periodic behaviour
-            h_x,h_y = self.size[0]//2, self.size[1]//2
+        """
+        Handle the corner periodic behaviour
+        I found that without this step, the Green's Func was wrong in the non-periodic case, as the particles
+        were pulled towards the centre of the larger padded domain instead of their collective centre of mass
+        in the centre of the smaller original domain in which they are initialized. 
+        """
+        h_x,h_y = self.size[0]//2, self.size[1]//2
 
-            try:
-                g[h_x:, :h_y] = np.flip(g[:h_x,:h_y],axis=0)
-                g[:,h_y:] = np.flip(g[:,:h_y],axis=1)
-            except: 
-                g[h_x:, :h_y+1] = np.flip(g[:h_x+1,:h_y+1],axis=0)
-                g[:,h_y:] = np.flip(g[:,:h_y+1],axis=1)
+        try:
+            g[h_x:, :h_y] = np.flip(g[:h_x,:h_y],axis=0)
+            g[:,h_y:] = np.flip(g[:,:h_y],axis=1)
+        except: 
+            g[h_x:, :h_y+1] = np.flip(g[:h_x+1,:h_y+1],axis=0)
+            g[:,h_y:] = np.flip(g[:,:h_y+1],axis=1)
                 
         if self.BC == 'Non-Periodic':
             #Handle the corner periodic behaviour
@@ -116,23 +123,15 @@ class NBody_solver:
         do this is to take the convolution of rho with the Green's function.
         """
         """
+        Numpy method
         rho_FFT = np.fft.rfftn(self.rho)
         green_FFT = np.fft.rfftn(self.green)
         
         psi_FFT = rho_FFT*green_FFT
         psi = np.fft.irfftn(psi_FFT)
-        
         """
-        """
-        plt.figure()
-        plt.pcolormesh(self.rho)
-        plt.title('Rho')
-        
-        plt.figure()
-        plt.pcolormesh(self.green)
-        plt.title('Green')
-        """
-        #Might need to trim the padding
+
+        #Scipy method, slightly faster
         rho_FFT = rfftn(self.rho)
         green_FFT = rfftn(self.green)
         
@@ -151,12 +150,6 @@ class NBody_solver:
             psi[:,realSize:] = 0
             psi[0,:] = 0
             psi[realSize:,:] = 0 
-            """
-            psi[:,0] = 0
-            psi[:,-1] = 0
-            psi[0,:] = 0
-            psi[-1,:] = 0 
-            """
 
         self.psi = psi
     
@@ -170,12 +163,14 @@ class NBody_solver:
         F_gp = np.zeros([2,self.size[0],self.size[1]])
         self.get_Potential()
         #Central differencing to get force field on the grid points 
-        #Could replace this with a higher order scheme
-        #np.roll(x,n,axis=0) shifts the array entries of x by n indices along axis 0
         
         F_gp[0] = 0.5*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
         F_gp[1] = 0.5*(np.roll(self.psi,1,axis=1)-np.roll(self.psi,-1,axis=1))
         """
+        Could replace this with a higher order scheme such as 2nd-order central difference to improve accuracy.
+        This is my initial attempt to implement it, however I did not have time to properly handle the boundary 
+        points which I think need to use forward difference for the non-periodic case.
+        
         if self.BC == 'Periodic':
             F_gp[0] = 0.5*(np.roll(self.psi,1,axis=0)-np.roll(self.psi,-1,axis=0))
             F_gp[1] = 0.5*(np.roll(self.psi,1,axis=1)-np.roll(self.psi,-1,axis=1))
@@ -202,7 +197,6 @@ class NBody_solver:
         """
         vTot = np.sqrt(self.v[:,0]**2 + self.v[:,1]**2)
         KE = np.sum(self.m*(vTot**2))
-        #Would be nice to take psi & rho as inputs to avoid calculating them redundantly
         psi = self.psi
         rho = self.rho
         PE = -0.5*np.sum(np.sum(psi)*rho)
@@ -225,21 +219,16 @@ class NBody_solver:
         self.x = self.x%self.size[0]
 
 
-    def advance_timeStep(self, file_save = None):
-        #file_save=['x_data','E_data',1]
+    def advance_timeStep(self):
         """
-        Take one step forward in time 
-        Save and output the particle positions and the total energy after the step
-        
-        Input:
-            file_save = (x_file, E_file, NParticles): the filenames to which we want to save 
-            the position and energy data. NParticles is the number of particles to track
+        Take one step forward in time by getting the forces and taking a time step
+        Also update the density and Green's function for the new particle distribution
+        Output the particle positions and the total energy after the step
         """
         #Get the forces from the current particle distribution (psi is defined during this operation)
         self.get_Forces()
         #Get the total energy for the current particle distribution (needs psi)
         self.get_totalEnergy()
-        energyTot = self.E
         #Move the particles according to the force field to get the new particle distribution
         #This method will update the positions and velocities of the particles
         self.time_stepping_leapfrog()
@@ -247,15 +236,4 @@ class NBody_solver:
         self.get_NGPdensity()
         self.get_greensFunc()
         
-        
-        #Save the data
-        """
-        print('File save: ', file_save)
-        if file_save is not 0:
-            file_save[1].write(f'{energyTot}\n') #might be able to replace this w just self.E
-            file_save[1].close()
-            file_save[0].write(f'{self.x[:file_save[2]]}\n')
-            file_save[0].close()
-        """
-                
         return self.E, self.x

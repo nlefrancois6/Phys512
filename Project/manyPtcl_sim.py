@@ -48,14 +48,7 @@ sim = nbod.NBody_solver(size,system,h, soft = soften, cosmology_mass=cmass, boun
 
 #Run the simulation
 
-#We'll want to store the density field, energy, and frame from each time-step
-"""
-if BC == 'Non-Periodic':
-    LY2 = 2*LY; LX2 = 2*LX
-    rho_store = np.zeros((nsteps+1, LY2, LX2))
-else:
-    rho_store = np.zeros((nsteps+1, LY, LX))
-"""
+#Store the density and energy from each time-step
 rho_store = np.zeros((nsteps+1, LY, LX))
     
 E_store = np.zeros(nsteps)
@@ -65,26 +58,15 @@ if BC == 'Periodic':
 if BC == 'Non-Periodic':
     rho_store[0,:,:] = sim.rho[:LY,:LX]
     
-
-
 #Use advance_timeStep() nsteps-many times
 for t in range(nsteps):
     #Store density field and energy
     E, x = sim.advance_timeStep()
     if BC == 'Periodic':
         rho_store[t+1,:,:] = sim.rho
-        #plt.figure()
-        #plt.pcolormesh(sim.psi)
-        #plt.title('Psi')
     if BC == 'Non-Periodic':
         rho_store[t+1,:,:] = sim.rho[:LY,:LX]
-        #plt.figure()
-        #plt.pcolormesh(sim.psi)
-        #plt.title('Psi')
-    #rho_store[t+1,:,:] = sim.rho
     E_store[t] = sim.E
-
-
 
 
 #Plot the energy and save the density frames
@@ -111,7 +93,7 @@ def animate(i):
 fig = plt.figure()
 plt.pcolormesh(rho_store[0,:,:], cmap = cm.plasma)
 plt.colorbar()
-"""
+
 if savePlots:
     for t in range(nsteps):
         print('Saved t = ',t+1)
@@ -119,12 +101,3 @@ if savePlots:
         plt.pcolormesh(rho_store[t+1,:,:], cmap = cm.plasma)
         filename = 'Frames/Q3_NP_frame'+str(t+1)+'.png'
         plt.savefig(filename)
-"""
-"""
-#Run the simulation and generate the animation from it
-anim = animation.FuncAnimation(fig, animate, frames = nsteps, interval = h, blit = False)
-plt.show()
-#anim.save('Part3_periodic.gif', writer='imagemagick')
-
-#anim.save('Test.gif', writer='imagemagick')
-"""
