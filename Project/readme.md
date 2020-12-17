@@ -1,4 +1,6 @@
 N-Body Final Project
+PHYS 512 Fall 2020
+Noah LeFrancois
 
 General Comments:
 The N-Body code was implemented in both 2D and 3D; the majority of the 2D code was easily extended to 3D, however a few more significant changes needed to be made. This includes plotting the density field in 2D vs directly plotting all of the particles in a scatter plot in 3D; using the fast_histogram package to accelerate the 2D code but not being able to use it in 3D since the package has not been extended to 3D; and adaptation of the boundary conditions in the non-periodic case where the setting of Dirichlet boundary conditions requires some more careful handling of array indices.
@@ -9,10 +11,12 @@ As noted in the comments of Q4.py, I tested a few different implementations of F
 
 Discussion of Suggested Problems:
 Part 1:
-As seen in Q1_energy.png and Q1.gif, a single particle starting at rest remains motionless.
+As seen in Q1_energy.png and Q1.gif, a single particle starting at rest remains motionless. 
+This test case video was performed in 2D since the scatter3D axis limits don't display the domain well and I was able to produce a much clearer demonstration using the 2D colormap figure; however the dynamics are the same in both 2D and 3D.
 
 Part 2:
-As seen in Q2_energy.png and Q2.gif, the 2-particle orbit test case remained in its orbit over the course of multiple rotations. The energy spiked once every period as the particles passed closer and some blow-up error occured, however this spike soon returned back to approximately the original level.
+As seen in Q2_energy.png and Q2.gif, the 2-particle orbit test case remained in its orbit over the course of multiple rotations. The energy spiked once every period as the particles passed closer and some blow-up error occured, however this spike soon returned back to approximately the original level. 
+This test case video was performed in 2D since the scatter3D axis limits don't display the domain well & change with each frame, and I was able to produce a much clearer demonstration using the 2D colormap figure; however the dynamics are the same in both 2D and 3D.
 
 Part 3:
 The 3D periodic case video could not be uploaded to github as the file was too large due to the higher frame rate/smaller time step I used. I instead uploaded it to a google drive folder, accessible at the following link:
