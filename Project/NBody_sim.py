@@ -11,7 +11,7 @@ from scipy.fft import rfftn, irfftn
 import matplotlib.pyplot as plt
 
 class NBody_solver:
-    def __init__(self,size,particles,dt,soft=0.1,G=10,boundaryCondition='Periodic', cosmology_mass=False):
+    def __init__(self,size,particles,dt,soft=0.1,G=1,boundaryCondition='Periodic', cosmology_mass=False):
         """
         The NBody class that specifies the simulation. 
         Input(s):
@@ -83,7 +83,7 @@ class NBody_solver:
         r += self.soft**2
         r = np.sqrt(r)
         
-        g = 1/(4*np.pi*r)
+        g = np.log(r)/(4*np.pi)
         
         """
         Handle the corner periodic behaviour
@@ -99,7 +99,7 @@ class NBody_solver:
         except: 
             g[h_x:, :h_y+1] = np.flip(g[:h_x+1,:h_y+1],axis=0)
             g[:,h_y:] = np.flip(g[:,:h_y+1],axis=1)
-                
+        """      
         if self.BC == 'Non-Periodic':
             #Handle the corner periodic behaviour
             h_x,h_y = self.size[0]//2, self.size[1]//2
@@ -111,10 +111,7 @@ class NBody_solver:
                 g[h_x:, :h_y+1] = np.flip(g[:h_x+1,:h_y+1],axis=0)
                 g[:,h_y:] = np.flip(g[:,:h_y+1],axis=1)
         """
-        if self.BC == 'Periodic':
-            g = np.flip(g,0)
-            g = np.flip(g,1)
-        """   
+ 
         self.green = g
         
     def get_Potential(self):
