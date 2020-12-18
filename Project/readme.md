@@ -1,5 +1,5 @@
-N-Body Final Project
-PHYS 512 Fall 2020
+N-Body Final Project,
+PHYS 512 Fall 2020,
 Noah LeFrancois
 
 General Comments:
